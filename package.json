@@ -1,0 +1,18 @@
+{
+  "name": "catalogo-processos-furg",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "vendor:design-system": "node scripts/vendor-design-system.mjs",
+    "build": "pnpm -r --if-present build",
+    "dev": "node scripts/pnpm-with-env.mjs --parallel --filter @furg/processos-api --filter @furg/processos-web dev",
+    "typecheck": "pnpm --filter @furg/processos-contracts build && pnpm --filter @furg/processos-bpmn build && pnpm db:generate && pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "test:e2e": "pnpm --filter @furg/processos-web test:e2e",
+    "db:generate": "node scripts/pnpm-with-env.mjs --filter @furg/processos-api prisma:generate",
+    "db:migrate": "node scripts/pnpm-with-env.mjs --filter @furg/processos-api prisma:migrate",
+    "db:seed": "node scripts/pnpm-with-env.mjs --filter @furg/processos-api prisma:seed",
+    "check": "pnpm typecheck && pnpm test && pnpm build"
+  }
+}

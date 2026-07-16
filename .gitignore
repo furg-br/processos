@@ -1,0 +1,50 @@
+# Dependências e caches de gerenciadores
+node_modules/
+.pnpm-store/
+.pnp.*
+
+# Builds, caches e cobertura
+dist/
+build/
+coverage/
+.vite/
+.turbo/
+.cache/
+*.tsbuildinfo
+
+# Testes automatizados
+playwright-report/
+test-results/
+blob-report/
+.nyc_output/
+
+# Ambientes e segredos locais
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Dados e arquivos de execução locais
+apps/api/prisma/*.db
+apps/api/prisma/*.db-journal
+*.log
+logs/
+*.pid
+
+# Editores e ferramentas locais
+.idea/
+.vscode/
+.history/
+*.swp
+*.swo
+*~
+.codex/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+Desktop.ini

@@ -1,0 +1,38 @@
+{
+  "name": "@furg/processos-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@furg/design-system": "file:../../vendor/furg-design-system-0.4.0.tgz",
+    "@furg/processos-bpmn": "workspace:*",
+    "@furg/processos-contracts": "workspace:*",
+    "@xyflow/react": "^12.8.1",
+    "bpmn-js": "^18.3.1",
+    "bpmn-js-bpmnlint": "^0.24.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.18.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.51.1",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "bpmnlint": "^11.12.1",
+    "bpmnlint-pack-config": "^0.9.0",
+    "happy-dom": "^17.4.4",
+    "typescript": "^5.7.3",
+    "vite": "^6.2.1",
+    "vitest": "^3.0.7"
+  }
+}

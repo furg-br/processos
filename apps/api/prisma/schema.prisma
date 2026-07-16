@@ -1,0 +1,300 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Visibility {
+  PUBLIC
+  INTERNAL
+  RESTRICTED
+}
+
+enum Perspective {
+  AS_IS
+  TO_BE
+}
+
+enum VersionStatus {
+  DRAFT
+  UNIT_REVIEW
+  CURATOR_REVIEW
+  PUBLISHED
+  CHANGES_REQUESTED
+  SUPERSEDED
+  ARCHIVED
+}
+
+enum RelationType {
+  DECOMPOSES
+  CALLS
+  PRECEDES
+  EXCHANGES_INFORMATION
+  RELATED_TO
+}
+
+enum SoftwareBindingKind {
+  SUPPORTS
+  AUTOMATES
+  INVOKES
+  STARTS
+  RECEIVES
+}
+
+enum DataDirection {
+  INPUT
+  OUTPUT
+}
+
+model Taxonomy {
+  id        String     @id @default(uuid())
+  name      String
+  slug      String     @unique
+  parentId  String?
+  parent    Taxonomy?  @relation("TaxonomyTree", fields: [parentId], references: [id])
+  children  Taxonomy[] @relation("TaxonomyTree")
+  version   Int        @default(1)
+  active    Boolean    @default(true)
+  processes Process[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model OrganizationUnit {
+  id          String             @id @default(uuid())
+  externalId  String             @unique
+  acronym     String
+  name        String
+  parentId    String?
+  parent      OrganizationUnit?  @relation("OrganizationTree", fields: [parentId], references: [id])
+  children    OrganizationUnit[] @relation("OrganizationTree")
+  active      Boolean            @default(true)
+  owned       Process[]          @relation("ProcessOwner")
+  participants ProcessUnit[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model Process {
+  id             String          @id @default(uuid())
+  slug           String          @unique
+  title          String
+  description    String
+  category       String
+  audience       String
+  visibility     Visibility      @default(INTERNAL)
+  continuous     Boolean         @default(false)
+  ownerUnitId    String
+  ownerUnit      OrganizationUnit @relation("ProcessOwner", fields: [ownerUnitId], references: [id])
+  taxonomyId     String?
+  taxonomy       Taxonomy?       @relation(fields: [taxonomyId], references: [id])
+  participantUnits ProcessUnit[]
+  versions       ProcessVersion[]
+  outgoingRelations ProcessRelation[] @relation("RelationSource")
+  incomingRelations ProcessRelation[] @relation("RelationTarget")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  archivedAt     DateTime?
+
+  @@index([title])
+  @@index([visibility])
+}
+
+model ProcessUnit {
+  processId String
+  unitId    String
+  role      String
+  process   Process          @relation(fields: [processId], references: [id], onDelete: Cascade)
+  unit      OrganizationUnit @relation(fields: [unitId], references: [id])
+
+  @@id([processId, unitId, role])
+}
+
+model ProcessVersion {
+  id             String        @id @default(uuid())
+  processId      String
+  process        Process       @relation(fields: [processId], references: [id], onDelete: Cascade)
+  revision       Int
+  perspective    Perspective
+  status         VersionStatus @default(DRAFT)
+  bpmnXml        String        @db.Text
+  metadata       Json          @default("{}")
+  processSla     String?
+  contentHash    String
+  createdBy      String
+  createdAt      DateTime      @default(now())
+  submittedAt    DateTime?
+  unitApprovedAt DateTime?
+  curatorApprovedAt DateTime?
+  publishedAt    DateTime?
+  reviewNote     String?
+  elementBindings ElementBinding[]
+  dataBindings   DataBinding[]
+  leases         EditLease[]
+  audits         AuditEvent[]
+  attachments    Attachment[]
+
+  @@unique([processId, revision])
+  @@index([processId, status, perspective])
+}
+
+model ProcessRelation {
+  id              String       @id @default(uuid())
+  sourceProcessId String
+  targetProcessId String
+  type            RelationType
+  label           String?
+  sourceElementId String?
+  source          Process      @relation("RelationSource", fields: [sourceProcessId], references: [id], onDelete: Cascade)
+  target          Process      @relation("RelationTarget", fields: [targetProcessId], references: [id], onDelete: Cascade)
+  createdAt       DateTime     @default(now())
+
+  @@unique([sourceProcessId, targetProcessId, type])
+}
+
+model SoftwareSystem {
+  id          String         @id @default(uuid())
+  name        String
+  slug        String         @unique
+  description String?
+  ownerUnitId String?
+  modules     SystemModule[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model SystemModule {
+  id            String          @id @default(uuid())
+  systemId      String
+  system        SoftwareSystem  @relation(fields: [systemId], references: [id], onDelete: Cascade)
+  name          String
+  slug          String
+  functionalities Functionality[]
+
+  @@unique([systemId, slug])
+}
+
+model Functionality {
+  id          String              @id @default(uuid())
+  moduleId    String
+  module      SystemModule        @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  name        String
+  slug        String
+  operations  SoftwareOperation[]
+
+  @@unique([moduleId, slug])
+}
+
+model SoftwareOperation {
+  id              String          @id @default(uuid())
+  functionalityId String
+  functionality   Functionality   @relation(fields: [functionalityId], references: [id], onDelete: Cascade)
+  operationId     String
+  method          String?
+  path            String?
+  version         String
+  sourceHash      String?
+  deprecated      Boolean         @default(false)
+  bindings        ElementBinding[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@unique([functionalityId, operationId, version])
+}
+
+model ElementBinding {
+  id               String              @id @default(uuid())
+  processVersionId String
+  processVersion   ProcessVersion      @relation(fields: [processVersionId], references: [id], onDelete: Cascade)
+  bpmnElementId    String
+  organizationUnitId String?
+  role             String?
+  workDuration     String?
+  waitDuration     String?
+  operationId      String?
+  operation        SoftwareOperation?  @relation(fields: [operationId], references: [id])
+  kind             SoftwareBindingKind?
+
+  @@index([processVersionId, bpmnElementId])
+}
+
+model InformationAsset {
+  id             String                     @id @default(uuid())
+  name           String
+  slug           String                     @unique
+  description    String
+  kind           String
+  ownerUnitId    String?
+  versions       InformationSchemaVersion[]
+  createdAt      DateTime                   @default(now())
+  updatedAt      DateTime                   @updatedAt
+}
+
+model InformationSchemaVersion {
+  id          String           @id @default(uuid())
+  assetId     String
+  asset       InformationAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  version     Int
+  visibility  Visibility       @default(INTERNAL)
+  jsonSchema  Json
+  contentHash String
+  createdBy   String
+  createdAt   DateTime         @default(now())
+  bindings    DataBinding[]
+
+  @@unique([assetId, version])
+}
+
+model DataBinding {
+  id                  String                   @id @default(uuid())
+  processVersionId    String
+  processVersion      ProcessVersion           @relation(fields: [processVersionId], references: [id], onDelete: Cascade)
+  bpmnElementId       String?
+  informationSchemaId String
+  informationSchema   InformationSchemaVersion @relation(fields: [informationSchemaId], references: [id])
+  direction           DataDirection
+
+  @@unique([processVersionId, bpmnElementId, informationSchemaId, direction])
+}
+
+model Attachment {
+  id               String         @id @default(uuid())
+  processVersionId String
+  processVersion   ProcessVersion @relation(fields: [processVersionId], references: [id], onDelete: Cascade)
+  name             String
+  objectKey        String
+  mimeType         String
+  size             Int
+  visibility       Visibility
+  createdAt        DateTime       @default(now())
+}
+
+model EditLease {
+  id               String         @id @default(uuid())
+  processVersionId String
+  processVersion   ProcessVersion @relation(fields: [processVersionId], references: [id], onDelete: Cascade)
+  holderId         String
+  holderName       String
+  token            String         @unique
+  expiresAt        DateTime
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([processVersionId, expiresAt])
+}
+
+model AuditEvent {
+  id               String         @id @default(uuid())
+  processVersionId String
+  processVersion   ProcessVersion @relation(fields: [processVersionId], references: [id], onDelete: Cascade)
+  actorId          String
+  actorName        String
+  action           String
+  details          Json           @default("{}")
+  createdAt        DateTime       @default(now())
+
+  @@index([processVersionId, createdAt])
+}

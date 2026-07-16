@@ -1,0 +1,68 @@
+name: processos-furg
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: processos
+      POSTGRES_USER: processos
+      POSTGRES_PASSWORD: processos
+    ports:
+      - "${POSTGRES_PORT:-55434}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U processos -d processos"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: processos
+      MINIO_ROOT_PASSWORD: processos-local
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://processos:processos@postgres:5432/processos?schema=public
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: us-east-1
+      S3_BUCKET: processos
+      S3_ACCESS_KEY: processos
+      S3_SECRET_KEY: processos-local
+      WEB_ORIGIN: http://localhost:8080
+      API_PORT: 3000
+      AUTH_MODE: development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    ports:
+      - "3000:3000"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_URL: /api/v1
+        VITE_PUBLIC_SITE_URL: ${VITE_PUBLIC_SITE_URL:-http://localhost:8080}
+        VITE_PUBLIC_INDEXING: ${VITE_PUBLIC_INDEXING:-false}
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+
+volumes:
+  postgres-data:
+  minio-data:

@@ -1,0 +1,10 @@
+{
+  "extends": ["bpmnlint:recommended"],
+  "rules": {
+    "label-required": "error",
+    "start-event-required": "error",
+    "end-event-required": "error",
+    "no-disconnected": "error",
+    "conditional-flows": "warn"
+  }
+}
