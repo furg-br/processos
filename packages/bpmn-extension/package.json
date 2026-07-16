@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@furg/processos-contracts": "workspace:*",
-    "fast-xml-parser": "^4.5.3"
+    "fast-xml-parser": "^5.7.0"
   },
   "devDependencies": {
     "typescript": "^5.7.3",
