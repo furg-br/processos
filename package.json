@@ -10,7 +10,7 @@
     "benchmark:v2": "node scripts/benchmark-v2.mjs",
     "bundle:export": "node scripts/export-process-bundle.mjs",
     "agent-pilot:prepare": "node experiments/agent-consumption/prepare-kit.mjs",
-    "build": "pnpm -r --if-present build",
+    "build": "pnpm --filter @furg/processos-api prisma:generate && pnpm -r --if-present build",
     "dev": "node scripts/pnpm-with-env.mjs --parallel --filter @furg/processos-api --filter @furg/processos-web dev",
     "dev:api": "node scripts/pnpm-with-env.mjs --filter @furg/processos-api dev",
     "dev:web": "node scripts/pnpm-with-env.mjs --filter @furg/processos-web dev",
@@ -29,5 +29,16 @@
   },
   "devDependencies": {
     "yaml": "^2.9.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "esbuild",
+      "prisma"
+    ],
+    "ignoredBuiltDependencies": [
+      "@scarf/scarf"
+    ]
   }
 }
