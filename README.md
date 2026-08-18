@@ -269,6 +269,47 @@ docker compose down -v
 
 Para proteger um processo específico antes de mudanças maiores, use **Exportar pacote**. Em ambientes reais, mantenha também uma rotina de backup e restauração testada do PostgreSQL.
 
+### Criar e restaurar um snapshot completo
+
+Migrations alteram a estrutura do banco e não substituem backup. Para transportar todo o estado da plataforma, incluindo processos, versões, BPMNs, recursos v2 e auditoria, gere um snapshot lógico do PostgreSQL:
+
+```powershell
+pnpm db:snapshot:create -- C:\Backups\processos-furg
+```
+
+Se o diretório for omitido, o comando cria uma pasta datada dentro de `snapshots/`. O diretório gerado contém:
+
+- `postgres.dump`, no formato custom do PostgreSQL;
+- `SHA256SUMS`, usado para detectar corrupção ou alteração;
+- `manifest.json`, com commit, versão do PostgreSQL, última migration e contagens de controle;
+- `INSTRUCOES.txt`, com o comando mínimo de restauração.
+
+Antes de transferir ou restaurar, valide o pacote:
+
+```powershell
+pnpm db:snapshot:inspect -- C:\Backups\processos-furg
+```
+
+No computador de destino, use a mesma revisão do repositório indicada no manifesto, inicie o PostgreSQL e restaure:
+
+```powershell
+docker compose up -d postgres
+pnpm db:snapshot:restore -- C:\Backups\processos-furg --confirm-replace=processos
+docker compose up -d api web
+```
+
+A confirmação precisa reproduzir exatamente o nome do banco. A restauração remove e recria o banco `processos`, valida o checksum, confere a última migration e compara as contagens registradas no manifesto. A API e a interface permanecem paradas após a restauração para permitir inspeção antes da inicialização.
+
+Para testar sem tocar no banco principal, restaure em um banco cujo nome termine em `_restore_test`:
+
+```powershell
+pnpm db:snapshot:restore -- C:\Backups\processos-furg `
+  --target-database=processos_restore_test `
+  --confirm-replace=processos_restore_test
+```
+
+O snapshot não contém variáveis de ambiente, senhas, imagens Docker nem o repositório. Transfira esses itens separadamente e nunca inclua o `.env` em um pacote público. O procedimento operacional detalhado está em [docs/operacao-on-premises.md](docs/operacao-on-premises.md).
+
 ## Usar outro PostgreSQL
 
 Edite `DATABASE_URL` no `.env` da raiz:
@@ -355,7 +396,7 @@ As ações relevantes também geram registros de auditoria no PostgreSQL, como c
 
 ## Solução de problemas
 
-### A interface mostra “Modo de demonstração”
+### A interface mostra "Modo de demonstração"
 
 O frontend não alcançou a API e carregou o fallback local. Confirme:
 

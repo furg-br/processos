@@ -22,6 +22,9 @@
     "db:deploy": "node scripts/pnpm-with-env.mjs --filter @furg/processos-api prisma:deploy",
     "db:validate": "node scripts/pnpm-with-env.mjs --filter @furg/processos-api prisma:validate",
     "db:seed": "node scripts/pnpm-with-env.mjs --filter @furg/processos-api prisma:seed",
+    "db:snapshot:create": "node scripts/db-snapshot.mjs create",
+    "db:snapshot:inspect": "node scripts/db-snapshot.mjs inspect",
+    "db:snapshot:restore": "node scripts/db-snapshot.mjs restore",
     "check": "pnpm typecheck && pnpm test && pnpm build"
   },
   "devDependencies": {

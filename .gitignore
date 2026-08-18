@@ -29,6 +29,7 @@ blob-report/
 *.pfx
 
 # Dados e arquivos de execução locais
+snapshots/
 apps/api/prisma/*.db
 apps/api/prisma/*.db-journal
 artifacts/rsc-as-is/
