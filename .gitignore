@@ -31,6 +31,12 @@ blob-report/
 # Dados e arquivos de execução locais
 apps/api/prisma/*.db
 apps/api/prisma/*.db-journal
+artifacts/rsc-as-is/
+artifacts/examples/
+artifacts/agent-pilot-kit/
+artifacts/operational-validation/
+*.process-bundle.zip
+*.process-bundle-v2.zip
 *.log
 logs/
 *.pid

@@ -2,7 +2,7 @@
 
 Status: **implementação concluída; definição de pronto satisfeita**  
 Escopo: contrato, plataforma, governança, migração e piloto  
-Referência principal: `artifacts/rsc-as-is`
+Referência principal: contrato `processos.furg.br/v2` e versões persistidas pela plataforma
 
 ## 1. Objetivo
 
@@ -491,7 +491,7 @@ Entregas:
 - IDs semânticos;
 - perfis de conformidade;
 - regras de compatibilidade;
-- RSC convertido em fixture v2;
+- RSC importado e mantido como processo v2 no PostgreSQL;
 - especificação de migração v1 → v2;
 - threat model do bundle.
 
@@ -687,7 +687,7 @@ O v2 estará concluído quando:
 ## 20. Ordem de trabalho e política de mudança
 
 - Executar as fases na ordem indicada; especificação antecede banco e interface.
-- Entregar fatias verticais verificáveis usando o RSC como fixture permanente.
+- Entregar fatias verticais verificáveis usando uma versão do RSC persistida na plataforma.
 - Não realizar migração destrutiva do v1 antes do round-trip e do relatório de perdas.
 - Toda alteração incompatível no contrato exige nova versão major ou regra formal de migração.
 - Novas entidades entram no núcleo somente quando necessárias para ao menos dois casos ou exigidas por uma invariável canônica.
@@ -699,8 +699,8 @@ Este documento constitui o planejamento fechado. Mudanças decorrentes da Fase 0
 
 Em 16 de agosto de 2026, as fases 0 a 9 foram implementadas e verificadas. A evidência consolidada está em `artifacts/v2-conformance-report.md`. O contrato, a aplicação e a documentação deixam de ser uma proposta e passam a constituir a baseline validada `2.0`.
 
-O gate de restauração foi executado em ambiente isolado local: PostgreSQL e objetos foram restaurados, a release RSC foi reexportada e o ZIP canônico manteve o mesmo SHA-256. A evidência está em `artifacts/operational-validation/restore-report.json`.
+O gate histórico de restauração foi executado em ambiente isolado local. Após a consolidação, PostgreSQL passa a conter também os pacotes e arquivos, e o teste de restauração deve comparar o ZIP reexportado com o `bundleHash` persistido.
 
 O gate de interoperabilidade foi executado com duas ferramentas externas distintas, ChatGPT 5.6 e Claude Sonnet 5, sem acesso ao gabarito e sem correção manual. As duas respostas foram estruturalmente válidas, identificaram 6/6 referências obrigatórias e obtiveram 100% de cobertura no avaliador offline. Respostas brutas, hashes, metadados e relatório estão em `artifacts/agent-pilot-results`.
 
-Com o contrato aberto, fixtures independentes, validação, operação on-premises, restauração, segurança, acessibilidade e consumo externo comprovados, os 17 itens da definição de pronto estão satisfeitos. Evoluções posteriores devem ser tratadas como manutenção compatível da v2 ou como escopo explícito da v3.
+Com o contrato aberto, fixtures sintéticas, validação, operação on-premises, restauração, segurança, acessibilidade e consumo externo comprovados, os 17 itens da definição de pronto estão satisfeitos. Evoluções posteriores devem ser tratadas como manutenção compatível da v2 ou como escopo explícito da v3.

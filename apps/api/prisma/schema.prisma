@@ -460,7 +460,7 @@ model Attachment {
   processVersionId String
   processVersion   ProcessVersion @relation(fields: [processVersionId], references: [id], onDelete: Cascade)
   name             String
-  objectKey        String
+  content          Bytes
   mimeType         String
   size             Int
   visibility       Visibility

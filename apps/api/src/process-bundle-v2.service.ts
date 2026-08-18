@@ -135,7 +135,7 @@ export class ProcessBundleV2Service {
     return { importId: job.id, status: job.status, valid: report.valid, readyToApply, issues: report.issues, coverage: report.coverage, manifest: report.manifest, requiresCgtiApproval, technicalBindingsWillBe: requiresCgtiApproval && !isCgti(headers) ? "PENDING_CGTI_APPROVAL" : "APPROVED", institutionalUnitMappings, diff };
   }
 
-  async apply(importId: string, input: { unitMappings?: InstitutionalUnitMappingInput[]; ownerUnitId?: string }, headers?: Record<string, string | undefined>) {
+  async apply(importId: string, input: { unitMappings?: InstitutionalUnitMappingInput[]; ownerUnitId?: string; targetProcessId?: string }, headers?: Record<string, string | undefined>) {
     const actor = identity(headers);
     const job = await this.prisma.bundleImportJob.findUnique({ where: { id: importId } });
     if (!job) throw new NotFoundException("Importação não encontrada.");
@@ -174,7 +174,13 @@ export class ProcessBundleV2Service {
     });
     const existingBindingSet = await this.prisma.bindingSetVersion.findUnique({ where: { id: report.manifest.bindingSetVersionId }, select: { id: true } });
     const existingResource = await this.prisma.bundleResource.findFirst({ where: { kind: "ProcessDefinition", semanticKey: definition.metadata.key }, include: { bindingSetVersion: { include: { processVersion: true } } } });
-    const existingProcess = existingResource ? await this.prisma.process.findUnique({ where: { id: existingResource.bindingSetVersion.processVersion.processId }, include: { versions: true } }) : null;
+    const processBySemanticKey = existingResource ? await this.prisma.process.findUnique({ where: { id: existingResource.bindingSetVersion.processVersion.processId }, include: { versions: true } }) : null;
+    const targetedProcess = input.targetProcessId ? await this.prisma.process.findUnique({ where: { id: input.targetProcessId }, include: { versions: true } }) : null;
+    if (input.targetProcessId && !isCgti(headers)) throw new ForbiddenException("Somente administradores do CGTI podem vincular uma primeira versão v2 a um processo existente.");
+    if (input.targetProcessId && !targetedProcess) throw new NotFoundException("O processo de destino informado não foi encontrado.");
+    if (targetedProcess && processBySemanticKey && targetedProcess.id !== processBySemanticKey.id) throw new ConflictException("A chave semântica do pacote já pertence a outro processo.");
+    if (targetedProcess && !processBySemanticKey && targetedProcess.versions.some((version) => version.contractVersion === "v2")) throw new ConflictException("O processo de destino já possui uma identidade v2 diferente.");
+    const existingProcess = targetedProcess ?? processBySemanticKey;
     const governedUnitId = existingVersion?.process.ownerUnitId ?? existingProcess?.ownerUnitId ?? ownerUnit.id;
     if ((existingVersion || existingProcess) && ownerUnit.id !== governedUnitId) {
       throw new ConflictException("Uma nova versão deve preservar a unidade proprietária do processo existente.");
@@ -208,6 +214,14 @@ export class ProcessBundleV2Service {
         participantUnits: { create: processUnitRows },
       }, include: { versions: true } });
       if (existingProcess) {
+        await tx.process.update({ where: { id: process.id }, data: {
+          title: definition.metadata.title,
+          description: definition.metadata.description ?? "Processo importado por ProcessBundle v2.",
+          category: definition.metadata.labels.category ?? "Processo institucional",
+          audience: definition.metadata.labels.audience ?? (definition.spec.audienceRefs.join(", ") || "Público institucional"),
+          visibility,
+          ownerUnitId: ownerUnit.id,
+        } });
         await tx.processUnit.deleteMany({ where: { processId: process.id } });
         await tx.processUnit.createMany({ data: processUnitRows.map((row) => ({ processId: process.id, ...row })), skipDuplicates: true });
       }

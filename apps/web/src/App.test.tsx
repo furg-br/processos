@@ -11,23 +11,25 @@ describe("Catálogo de processos", () => {
     vi.unstubAllGlobals();
   });
 
-  it("apresenta o catálogo demonstrativo quando a API está indisponível", async () => {
+  it("informa a indisponibilidade sem usar processos locais como fonte alternativa", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
     render(<App />);
-    expect(await screen.findByRole("heading", { name: /Do trabalho institucional/i })).toBeInTheDocument();
-    expect(await screen.findByText("Solicitação de desenvolvimento de software")).toBeInTheDocument();
-    expect(screen.getByText(/Modo de demonstração/)).toBeInTheDocument();
+    expect(await screen.findByText("API indisponível")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Tentar novamente" })).toBeInTheDocument();
+    expect(screen.queryByText("Solicitação de desenvolvimento de software")).not.toBeInTheDocument();
   });
 
-  it("abre uma visão compartilhada pela URL", async () => {
-    window.history.replaceState({}, "", "/processos/solicitacao-desenvolvimento/estrutura");
-    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
+  it("redireciona o endereço base de processos para o catálogo", async () => {
+    window.history.replaceState({}, "", "/processos/");
+    vi.stubGlobal("fetch", vi.fn().mockImplementation((input: string) => Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve(input.endsWith("/processes/relations/catalog") ? [] : demoProcesses),
+    })));
 
     render(<App />);
 
-    expect(await screen.findByRole("heading", { name: "Solicitação de desenvolvimento de software" })).toBeInTheDocument();
-    expect(await screen.findByRole("heading", { name: "Fluxo em formato textual" })).toBeInTheDocument();
-    expect(document.title).toBe("Solicitação de desenvolvimento de software - Visão textual | FURG");
+    expect(await screen.findByRole("heading", { name: /Do trabalho institucional/i })).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/catalogo");
   });
 
   it("remove o único rascunho pela zona de risco após repetir o identificador", async () => {
@@ -40,6 +42,7 @@ describe("Catálogo de processos", () => {
     });
     vi.stubGlobal("fetch", fetch);
     render(<App />);
+    expect((await screen.findByRole("heading", { name: process.title })).closest("header")).toHaveClass("furg-page-header--compact");
     fireEvent.click(await screen.findByRole("button", { name: "Remover rascunho" }));
     fireEvent.change(screen.getByRole("textbox", { name: "Identificador de confirmação" }), { target: { value: `${process.slug}/v1` } });
     const finalAction = screen.getAllByRole("button", { name: "Remover rascunho" })[1];

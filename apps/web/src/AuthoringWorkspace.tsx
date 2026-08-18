@@ -156,7 +156,7 @@ export function AuthoringWorkspace({ process, onChanged, onValidationChange }: {
     setError(undefined);
     try {
       const [authoring, units, catalog] = await Promise.all([getAuthoringState(process.id, version.id), listOrganizations(), listProcesses()]);
-      setState(authoring); setOrganizations(units); setProcesses(catalog.data); onValidationChange?.(authoring.validation);
+      setState(authoring); setOrganizations(units); setProcesses(catalog); onValidationChange?.(authoring.validation);
     } catch (cause) { onValidationChange?.(undefined); setError(cause instanceof Error ? cause.message : "Não foi possível abrir a autoria do contrato."); }
     finally { setLoading(false); }
   }

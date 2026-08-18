@@ -4,7 +4,7 @@ Protótipo funcional de um repositório governado de processos BPMN 2.0. A aplic
 
 ## Contrato v2
 
-O planejamento está em [Planejamento fechado — ProcessBundle v2](docs/planejamento-processbundle-v2.md) e a estrutura implementada em [Especificação do ProcessBundle v2](docs/process-bundle-v2.md). O formato possui schemas, CLI, migrador v1, threat model e dois fixtures independentes.
+O planejamento está em [Planejamento fechado - ProcessBundle v2](docs/planejamento-processbundle-v2.md) e a estrutura implementada em [Especificação do ProcessBundle v2](docs/process-bundle-v2.md). O formato possui schemas, CLI, migrador v1, threat model e fixtures sintéticas independentes.
 
 Status: baseline `processos.furg.br/v2` validada. A definição de pronto, incluindo restauração operacional e consumo independente por ChatGPT 5.6 e Claude Sonnet 5, está documentada em [Relatório de conformidade v2](artifacts/v2-conformance-report.md).
 
@@ -49,6 +49,20 @@ packages/bpmn-extension  extensão FURG, outline, lint e diff BPMN
 
 O BPMN XML é a fonte canônica do diagrama. Recursos semânticos versionados complementam o BPMN sem duplicá-lo. O ProcessBundle v2 preserva esses recursos e arquivos auxiliares com tamanho, visibilidade e SHA-256 no manifesto.
 
+### Fonte canônica dos processos
+
+Processos cadastrados não são carregados de arquivos do repositório. O PostgreSQL é a fonte canônica para versões, BPMN, recursos semânticos, relações, auditoria e identidades de publicação. A interface sempre consulta a API.
+
+Arquivos ProcessBundle são formatos de transporte. Eles entram pela importação e saem pela exportação, mas não permanecem como uma segunda fonte editável no projeto. Testes automatizados usam exclusivamente dados sintéticos construídos em memória por `@furg/processos-bundle/testing`.
+
+Para obter um ZIP a partir de uma versão persistida:
+
+```powershell
+pnpm bundle:export -- <processId> <versionId> <arquivo.zip>
+```
+
+Em outro ambiente, informe `PROCESSOS_API_URL`. Quando houver autenticação OIDC, informe o token em `PROCESSOS_ACCESS_TOKEN`. Corrigir um ZIP exportado não altera a base. A alteração deve ser realizada pela interface ou API em uma versão editável e o ZIP deve ser exportado novamente.
+
 ## Instalação local recomendada
 
 ### Requisitos
@@ -58,7 +72,7 @@ O BPMN XML é a fonte canônica do diagrama. Recursos semânticos versionados co
 - Docker Desktop, Docker Engine com Compose ou Podman compatível;
 - PowerShell para executar os exemplos abaixo.
 
-O frontend usa o pacote local `@furg/design-system` 0.4.0. Se `vendor/furg-design-system-0.4.0.tgz` não existir ou precisar ser atualizado, o projeto canônico do DS-FURG também deve estar disponível. O caminho padrão é `C:\Projetos\design-system-furg`; outro local pode ser informado em `FURG_DESIGN_SYSTEM_PATH`.
+O frontend usa o pacote local `@furg/design-system` 0.5.0. Se `vendor/furg-design-system-0.5.0.tgz` não existir ou precisar ser atualizado, o projeto canônico do DS-FURG também deve estar disponível. O caminho padrão é `C:\Projetos\design-system-furg`; outro local pode ser informado em `FURG_DESIGN_SYSTEM_PATH`.
 
 ### 1. Preparar ambiente e dependências
 
@@ -83,10 +97,10 @@ Instale as dependências:
 pnpm install
 ```
 
-### 2. Iniciar PostgreSQL e MinIO
+### 2. Iniciar PostgreSQL
 
 ```powershell
-docker compose up -d postgres minio
+docker compose up -d postgres
 docker compose ps
 ```
 
@@ -134,7 +148,6 @@ Endereços locais:
 | API | `http://localhost:3000/api/v1` |
 | OpenAPI/Swagger | `http://localhost:3000/api/v1/docs` |
 | Verificação da API | `http://localhost:3000/api/v1/health` |
-| Console do MinIO | `http://localhost:9001` (`processos` / `processos-local`) |
 
 O terminal que executa `pnpm dev` permanece aberto e mostra os logs do Vite e da API NestJS.
 
@@ -234,7 +247,7 @@ Abra um processo e selecione **Exportar pacote**. Versões v2 preservam os arqui
 
 ## Persistência e segurança dos dados
 
-Os diagramas, cadastros, revisões e eventos de auditoria ficam no banco indicado por `DATABASE_URL`. Na configuração recomendada, os dados sobrevivem a reinícios porque o Compose usa os volumes `postgres-data` e `minio-data`.
+Os diagramas, cadastros, revisões, pacotes, arquivos e eventos de auditoria ficam no banco indicado por `DATABASE_URL`. Na configuração recomendada, os dados sobrevivem a reinícios porque o Compose usa o volume `postgres-data`.
 
 Parar os serviços preserva os dados:
 
@@ -248,13 +261,13 @@ Remover apenas os contêineres também preserva os volumes:
 docker compose down
 ```
 
-O comando abaixo apaga definitivamente o banco e os objetos locais; use somente para reinicializar todo o ambiente:
+O comando abaixo apaga definitivamente o banco local; use somente para reinicializar todo o ambiente:
 
 ```powershell
 docker compose down -v
 ```
 
-Para proteger um processo específico antes de mudanças maiores, use **Exportar pacote**. Em ambientes reais, mantenha também uma rotina de backup do PostgreSQL e do armazenamento de objetos.
+Para proteger um processo específico antes de mudanças maiores, use **Exportar pacote**. Em ambientes reais, mantenha também uma rotina de backup e restauração testada do PostgreSQL.
 
 ## Usar outro PostgreSQL
 
@@ -305,7 +318,6 @@ Em produção, forneça credenciais por variáveis ou pelo gerenciador instituci
 | --- | --- | --- |
 | `DATABASE_URL` | conexão Prisma/PostgreSQL | banco `processos` em `localhost:55434` |
 | `POSTGRES_PORT` | porta publicada pelo Compose | `55434` |
-| `S3_ENDPOINT` | endpoint compatível com S3 | `http://localhost:9000` |
 | `WEB_ORIGIN` | origem permitida pela API | `http://localhost:5173` |
 | `API_PORT` | porta da API | `3000` |
 | `AUTH_MODE` | adaptador de identidade | `development` |

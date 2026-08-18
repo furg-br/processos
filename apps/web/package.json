@@ -11,7 +11,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@furg/design-system": "file:../../vendor/furg-design-system-0.4.0.tgz",
+    "@furg/design-system": "file:../../vendor/furg-design-system-0.5.0.tgz",
     "@furg/processos-bpmn": "workspace:*",
     "@furg/processos-contracts": "workspace:*",
     "@rjsf/core": "6.8.0",

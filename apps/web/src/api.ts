@@ -1,5 +1,4 @@
 import type { CreateProcessInput, OrganizationUnit, ProcessBundleV2Resource, ProcessDetail, ProcessRelation, ProcessSummary, SoftwareOperation, UpdateProcessInput } from "@furg/processos-contracts";
-import { demoDetails, demoOperations, demoProcesses, demoRelations, demoSchemas } from "./demo-data";
 import { getAccessToken } from "./identity";
 
 const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:3000/api/v1";
@@ -99,25 +98,16 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export async function listProcesses(): Promise<{ data: ProcessSummary[]; offline: boolean }> {
-  try { return { data: await request<ProcessSummary[]>("/processes"), offline: false }; }
-  catch { return { data: demoProcesses, offline: true }; }
+export async function listProcesses(): Promise<ProcessSummary[]> {
+  return request<ProcessSummary[]>("/processes");
 }
 
 export async function listProcessRelations(): Promise<ProcessRelation[]> {
-  try { return await request<ProcessRelation[]>("/processes/relations/catalog"); }
-  catch { return demoRelations; }
+  return request<ProcessRelation[]>("/processes/relations/catalog");
 }
 
-export async function getProcess(locator: string, allowDemoFallback = false): Promise<ProcessDetail> {
-  try { return await request<ProcessDetail>(`/processes/${encodeURIComponent(locator)}`); }
-  catch (error) {
-    const fallback = allowDemoFallback
-      ? Object.values(demoDetails).find((process) => process.id === locator || process.slug === locator)
-      : undefined;
-    if (fallback) return fallback;
-    throw error;
-  }
+export async function getProcess(locator: string): Promise<ProcessDetail> {
+  return request<ProcessDetail>(`/processes/${encodeURIComponent(locator)}`);
 }
 
 export async function listOrganizations(): Promise<OrganizationUnit[]> {
@@ -195,20 +185,16 @@ export async function deleteProcessRelation(processId: string, versionId: string
 }
 
 export async function listOperations(): Promise<CatalogSoftwareOperation[]> {
-  try {
-    const data = await request<any[]>("/catalog/software/operations");
-    return data.map((item) => ({
-      id: item.id, system: item.functionality.module.system.name, module: item.functionality.module.name,
-      functionality: item.functionality.name, functionalityId: item.functionalityId, operationId: item.operationId, method: item.method, path: item.path, version: item.version, deprecated: Boolean(item.deprecated),
-    }));
-  } catch { return demoOperations.map((item) => ({ ...item, functionalityId: "", deprecated: false })); }
+  const data = await request<any[]>("/catalog/software/operations");
+  return data.map((item) => ({
+    id: item.id, system: item.functionality.module.system.name, module: item.functionality.module.name,
+    functionality: item.functionality.name, functionalityId: item.functionalityId, operationId: item.operationId, method: item.method, path: item.path, version: item.version, deprecated: Boolean(item.deprecated),
+  }));
 }
 
 export async function listSchemas() {
-  try {
-    const data = await request<any[]>("/catalog/information-schemas");
-    return data.map((item) => ({ ...item, name: item.asset.name, createdAt: item.createdAt }));
-  } catch { return demoSchemas; }
+  const data = await request<any[]>("/catalog/information-schemas");
+  return data.map((item) => ({ ...item, name: item.asset.name, createdAt: item.createdAt }));
 }
 
 export async function createInformationSchema(input: { assetId?: string; name: string; slug: string; description: string; kind: string; visibility: "PUBLIC" | "INTERNAL" | "RESTRICTED"; jsonSchema: Record<string, unknown> }) {

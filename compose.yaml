@@ -17,25 +17,6 @@ services:
       timeout: 5s
       retries: 10
 
-  minio:
-    image: minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: processos
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-processos-local}
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - minio-data:/data
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:9000/minio/health/live"]
-      interval: 10s
-      timeout: 5s
-      retries: 6
-      start_period: 10s
-
   api:
     image: processos-furg-api:v2
     build:
@@ -43,11 +24,6 @@ services:
       dockerfile: apps/api/Dockerfile
     environment:
       DATABASE_URL: ${COMPOSE_DATABASE_URL:-postgresql://processos:processos@postgres:5432/processos?schema=public}
-      S3_ENDPOINT: http://minio:9000
-      S3_REGION: us-east-1
-      S3_BUCKET: processos
-      S3_ACCESS_KEY: processos
-      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-processos-local}
       WEB_ORIGIN: http://localhost:8080
       API_PORT: 3000
       AUTH_MODE: ${AUTH_MODE:-development}
@@ -58,8 +34,6 @@ services:
       PROCESS_REVIEW_WEBHOOK_SECRET: ${PROCESS_REVIEW_WEBHOOK_SECRET:-}
     depends_on:
       postgres:
-        condition: service_healthy
-      minio:
         condition: service_healthy
     ports:
       - "3000:3000"
@@ -98,4 +72,3 @@ services:
 
 volumes:
   postgres-data:
-  minio-data:

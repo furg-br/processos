@@ -6,8 +6,9 @@
     "architecture": "x64"
   },
   "input": {
-    "path": "C:\\Projetos\\processos\\artifacts\\rsc-as-is\\rsc-as-is.process-bundle-v2.zip",
+    "source": "versão 33000000-0000-4000-8000-000000000001 persistida e reexportável pela API",
     "bytes": 28612,
+    "sha256": "77d238b4f9a709afc34e09cb5a5f194b8ef5688ab90e5563199a423ea13b072e",
     "profile": "IMPLEMENTABLE"
   },
   "iterations": 25,

@@ -1,23 +1,27 @@
 import { createHash } from "node:crypto";
-import { cp, mkdir, readFile, writeFile } from "node:fs/promises";
+import { cp, mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { downloadProcessBundle } from "../../scripts/process-bundle-api.mjs";
 
 const experimentRoot = dirname(fileURLToPath(import.meta.url));
 const workspaceRoot = resolve(experimentRoot, "../..");
-const outputRoot = resolve(process.argv[2] ?? resolve(workspaceRoot, "artifacts/agent-pilot-kit"));
-const bundlePath = resolve(workspaceRoot, "artifacts/rsc-as-is/rsc-as-is.process-bundle-v2.zip");
+const [processId, versionId, requestedOutput] = process.argv.slice(2);
+if (!processId || !versionId) throw new Error("Uso: node experiments/agent-consumption/prepare-kit.mjs <processId> <versionId> [diretório]");
+const outputRoot = resolve(requestedOutput ?? resolve(workspaceRoot, "artifacts/agent-pilot-kit"));
+const downloaded = await downloadProcessBundle({ processId, versionId });
+const bundleName = "process-bundle-v2.zip";
 const sharedFiles = [
   [resolve(experimentRoot, "task.json"), "task.json"],
   [resolve(experimentRoot, "result.schema.json"), "result.schema.json"],
-  [bundlePath, "rsc-as-is.process-bundle-v2.zip"],
 ];
 
-const sha256 = async (path) => createHash("sha256").update(await readFile(path)).digest("hex");
+const bundleSha256 = createHash("sha256").update(downloaded.content).digest("hex");
 for (const agent of ["agent-a", "agent-b"]) {
   const target = resolve(outputRoot, agent);
   await mkdir(target, { recursive: true });
   for (const [source, name] of sharedFiles) await cp(source, resolve(target, name));
+  await writeFile(resolve(target, bundleName), downloaded.content);
   await writeFile(resolve(target, "INSTRUCOES.txt"), [
     "Entregue esta pasta a um único agente sem fornecer contexto adicional ou o diretório reviewer-only.",
     "A resposta deve ser somente um JSON válido conforme result.schema.json.",
@@ -35,7 +39,10 @@ await cp(resolve(experimentRoot, "result.schema.json"), resolve(reviewer, "resul
 const manifest = {
   generatedAt: new Date().toISOString(),
   contractVersion: "processos.furg.br/v2",
-  bundleSha256: await sha256(bundlePath),
+  processId,
+  versionId,
+  source: downloaded.url,
+  bundleSha256,
   agentPackages: ["agent-a", "agent-b"],
   reviewerOnly: "reviewer-only",
   warning: "Nunca entregue reviewer-only aos agentes participantes.",

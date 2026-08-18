@@ -52,19 +52,18 @@ O segundo fixture comprova que processos manuais não precisam receber aplicaç�
 | Exportação autenticada pelo proxy | passou; ZIP do RSC preservou SHA-256 `77d238b4f9a709afc34e09cb5a5f194b8ef5688ab90e5563199a423ea13b072e` |
 | Isolamento OIDC em imagem de produção | passou; health e projeção pública responderam 200, rota protegida com tentativa de bypass por query respondeu 503 sem provedor configurado |
 | Sintaxe dos quatro roteiros operacionais | passou em `bash -n` |
-| Backup PostgreSQL e objetos | passou; checksums verificados |
-| Restauração isolada e reexportação | passou; release, ZIP e objeto preservaram o mesmo SHA-256 |
+| Backup PostgreSQL | o roteiro atual inclui todo o conteúdo canônico do processo |
+| Restauração isolada e reexportação | deve preservar o ZIP e seu SHA-256 a partir do PostgreSQL |
 | SBOM | CycloneDX 1.6, 660 componentes |
 | Benchmark local do validador RSC | 25 iterações, p95 22,74 ms; referência, não SLA |
 | Consumo por agentes externos | passou; duas ferramentas distintas, respostas estruturalmente válidas e 6/6 referências obrigatórias em ambas |
 
 Arquivos de evidência:
 
-- `artifacts/rsc-as-is/rsc-as-is.process-bundle-v2.zip`
-- `artifacts/examples/emprestimo-biblioteca/emprestimo-biblioteca.process-bundle-v2.zip`
+- versões e releases persistidas no PostgreSQL, reexportáveis pela API
+- fixture sintética em memória de `@furg/processos-bundle/testing`
 - `artifacts/v2-validation-benchmark.json`
 - `artifacts/sbom.cdx.json`
-- `artifacts/operational-validation/restore-report.json`
 - `artifacts/agent-pilot-results/`
 - `experiments/agent-consumption/`
 

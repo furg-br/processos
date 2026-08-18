@@ -79,9 +79,10 @@ export function CatalogApp() {
   const [relations, setRelations] = useState<ProcessRelation[]>([]);
   const [selected, setSelected] = useState<ProcessDetail>();
   const [catalogLoading, setCatalogLoading] = useState(true);
+  const [catalogError, setCatalogError] = useState<string>();
+  const [catalogReload, setCatalogReload] = useState(0);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<{ locator: string; message: string }>();
-  const [offline, setOffline] = useState(false);
   const [creatingProcess, setCreatingProcess] = useState(false);
   const [importingProcess, setImportingProcess] = useState(false);
   const [catalogNotice, setCatalogNotice] = useState<{ title: string; message: string; tone: "success" | "warning" }>();
@@ -107,18 +108,29 @@ export function CatalogApp() {
   const selectedForRoute = selected && (selected.slug === routeLocator || selected.id === routeLocator) ? selected : undefined;
   const currentDetailError = detailError && detailError.locator === routeLocator ? detailError.message : undefined;
   const section = (Object.entries(sectionPaths).find(([, path]) => path === location.pathname)?.[0] as Section | undefined) ?? "catalog";
-  const isKnownRoute = location.pathname === "/" || Object.values(sectionPaths).includes(location.pathname) || isValidProcessRoute;
+  const isCatalogAlias = ["/", "/processos", "/processos/"].includes(location.pathname);
+  const isKnownRoute = isCatalogAlias || Object.values(sectionPaths).includes(location.pathname) || isValidProcessRoute;
 
   useEffect(() => {
-    if (location.pathname === "/") routerNavigate(sectionPaths.catalog, { replace: true });
-  }, [location.pathname, routerNavigate]);
+    if (isCatalogAlias) routerNavigate(sectionPaths.catalog, { replace: true });
+  }, [isCatalogAlias, routerNavigate]);
 
   useEffect(() => {
     if (publicRouteMatch?.params.locator) { setCatalogLoading(false); return; }
-    void Promise.all([listProcesses(), listProcessRelations()]).then(([{ data, offline }, relationData]) => {
-      setProcesses(data); setRelations(relationData); setOffline(offline); setCatalogLoading(false);
-    });
-  }, [publicRouteMatch?.params.locator]);
+    setCatalogLoading(true);
+    setCatalogError(undefined);
+    void Promise.all([listProcesses(), listProcessRelations()])
+      .then(([data, relationData]) => {
+        setProcesses(data);
+        setRelations(relationData);
+      })
+      .catch((error) => {
+        setProcesses([]);
+        setRelations([]);
+        setCatalogError(error instanceof Error ? error.message : "Não foi possível consultar a API.");
+      })
+      .finally(() => setCatalogLoading(false));
+  }, [catalogReload, publicRouteMatch?.params.locator]);
 
   useEffect(() => {
     if (!isValidProcessRoute || !routeLocator) {
@@ -139,7 +151,7 @@ export function CatalogApp() {
     let active = true;
     setDetailLoading(true);
     setDetailError(undefined);
-    void getProcess(routeLocator, offline)
+    void getProcess(routeLocator)
       .then((process) => { if (active) setSelected(process); })
       .catch((error) => {
         if (!active) return;
@@ -149,7 +161,7 @@ export function CatalogApp() {
       .finally(() => { if (active) setDetailLoading(false); });
     window.scrollTo?.({ top: 0, behavior: "smooth" });
     return () => { active = false; };
-  }, [catalogLoading, isValidProcessRoute, offline, routeLocator, selected]);
+  }, [catalogLoading, isValidProcessRoute, routeLocator, selected]);
 
   useEffect(() => {
     if (!selectedForRoute) return;
@@ -177,18 +189,15 @@ export function CatalogApp() {
 
   async function handleProcessCreated(created: { id: string; slug: string; title: string }) {
     setCreatingProcess(false);
-    const result = await listProcesses();
-    setProcesses(result.data);
-    setOffline(result.offline);
+    setProcesses(await listProcesses());
     routerNavigate(processPath(created, "diagram"));
   }
 
   async function handleProcessImported(imported: ImportProcessResult) {
     setImportingProcess(false);
-    const result = await listProcesses();
-    setProcesses(result.data);
-    setOffline(result.offline);
-    const process = result.data.find((item) => item.id === imported.processId);
+    const data = await listProcesses();
+    setProcesses(data);
+    const process = data.find((item) => item.id === imported.processId);
     const warningMessage = imported.warnings.map((warning) => warning.message).join(" ");
     setCatalogNotice(imported.warnings.length ? {
       title: "Processo importado com avisos",
@@ -224,7 +233,7 @@ export function CatalogApp() {
 
   async function refreshSelectedProcess() {
     if (!selected) return;
-    const [process, relationData] = await Promise.all([getProcess(selected.id, offline), listProcessRelations()]);
+    const [process, relationData] = await Promise.all([getProcess(selected.id), listProcessRelations()]);
     setRelations(relationData);
     handleProcessUpdated(process);
   }
@@ -246,7 +255,6 @@ export function CatalogApp() {
     { category: "Catálogo", items: [{ label: "Processos", link: sectionPaths.catalog }, { label: "Mapa institucional", link: sectionPaths.map }] },
     { category: "Padrões abertos", items: [{ label: "BPMN 2.0", link: "https://www.omg.org/spec/BPMN/2.0.2/" }, { label: "JSON Schema", link: "https://json-schema.org/" }] },
   ]} licenseText="Universidade Federal do Rio Grande · Protótipo institucional aberto · Editor BPMN por bpmn.io">
-    {offline ? <div className="offline-banner" role="status"><FurgIcon name="info" size={18} /><span>Modo de demonstração: conecte a API para persistir alterações.</span></div> : null}
     {!routeLocator ? <nav className="mobile-section-nav" aria-label="Seções do catálogo">
       <Link aria-current={section === "catalog" ? "page" : undefined} to={sectionPaths.catalog}><FurgIcon name="document" size={18} />Catálogo</Link>
       <Link aria-current={section === "map" ? "page" : undefined} to={sectionPaths.map}><FurgIcon name="results" size={18} />Mapa</Link>
@@ -255,11 +263,13 @@ export function CatalogApp() {
     </nav> : null}
     <FurgPage>
       {catalogNotice ? <div className="catalog-notice"><FurgMessage message={catalogNotice.message} title={catalogNotice.title} tone={catalogNotice.tone}><FurgButton onClick={() => setCatalogNotice(undefined)} size="small" variant="text">Dispensar</FurgButton></FurgMessage></div> : null}
-      {detailLoading || (isValidProcessRoute && !selectedForRoute && !currentDetailError) || (!routeLocator && catalogLoading) ? <div className="page-loading"><FurgProgressIndicator label="Carregando o catálogo" /></div> : routeLocator && selectedForRoute
-        ? <ProcessDetailPage process={selectedForRoute} view={detailView} onView={(view) => routerNavigate(processPath(selectedForRoute, view))} onAdministerVersion={() => routerNavigate(`${processPath(selectedForRoute, "versions")}#administracao-da-versao`)} onProcessUpdated={handleProcessUpdated} onProcessRemoved={handleProcessRemoved} onRefresh={refreshSelectedProcess} offline={offline} />
+      {detailLoading || (isValidProcessRoute && !selectedForRoute && !currentDetailError) || (!routeLocator && catalogLoading) ? <div className="page-loading"><FurgProgressIndicator label="Carregando o catálogo" /></div> : catalogError
+        ? <ApiUnavailablePage message={catalogError} onRetry={() => setCatalogReload((value) => value + 1)} />
+        : routeLocator && selectedForRoute
+        ? <ProcessDetailPage process={selectedForRoute} view={detailView} onView={(view) => routerNavigate(processPath(selectedForRoute, view))} onAdministerVersion={() => routerNavigate(`${processPath(selectedForRoute, "versions")}#administracao-da-versao`)} onProcessUpdated={handleProcessUpdated} onProcessRemoved={handleProcessRemoved} onRefresh={refreshSelectedProcess} />
         : routeLocator && currentDetailError ? <NotFoundPage message={currentDetailError} />
         : !isKnownRoute ? <NotFoundPage />
-        : section === "catalog" ? <CatalogPage processes={filtered} allProcesses={processes} facets={catalogFacets} query={query} visibility={visibility} offline={offline} onCreate={() => { setCatalogNotice(undefined); setCreatingProcess(true); }} onImport={() => { setCatalogNotice(undefined); setImportingProcess(true); }} onFacets={setCatalogFacets} onQuery={setQuery} onVisibility={setVisibility} onOpen={openProcess} />
+        : section === "catalog" ? <CatalogPage processes={filtered} allProcesses={processes} facets={catalogFacets} query={query} visibility={visibility} onCreate={() => { setCatalogNotice(undefined); setCreatingProcess(true); }} onImport={() => { setCatalogNotice(undefined); setImportingProcess(true); }} onFacets={setCatalogFacets} onQuery={setQuery} onVisibility={setVisibility} onOpen={openProcess} />
       : section === "map" ? <MapPage processes={processes} relations={relations} onOpen={openProcess} />
         : section === "schemas" ? <SchemasPage />
         : <SoftwarePage />}
@@ -269,10 +279,10 @@ export function CatalogApp() {
   </FurgAppShell>;
 }
 
-function CatalogPage({ processes, allProcesses, facets, query, visibility, offline, onCreate, onImport, onFacets, onQuery, onVisibility, onOpen }: {
+function CatalogPage({ processes, allProcesses, facets, query, visibility, onCreate, onImport, onFacets, onQuery, onVisibility, onOpen }: {
   processes: ProcessSummary[]; allProcesses: ProcessSummary[]; query: string; visibility: "ALL" | Visibility;
   facets: { system: string; module: string; unit: string; affiliation: string };
-  offline: boolean; onCreate: () => void; onImport: () => void;
+  onCreate: () => void; onImport: () => void;
   onFacets: (value: { system: string; module: string; unit: string; affiliation: string }) => void;
   onQuery: (value: string) => void; onVisibility: (value: "ALL" | Visibility) => void; onOpen: (id: string, view?: DetailView) => void;
 }) {
@@ -299,9 +309,9 @@ function CatalogPage({ processes, allProcesses, facets, query, visibility, offli
 
     <section className="catalog-section" id="catalogo">
       <header className="section-intro"><div><p className="eyebrow">Acervo governado</p><h2>Processos institucionais</h2><p>Explore o estado atual e as propostas futuras sem perder a história das decisões.</p></div>
-        <div className="catalog-actions"><div className="catalog-actions__buttons"><FurgButton disabled={offline} icon="document" onClick={onCreate}>Novo processo</FurgButton><FurgButton disabled={offline} icon="upload" onClick={onImport} variant="outlined">Importar processo</FurgButton></div><FurgSelect label="Visibilidade" value={visibility} onChange={(event) => onVisibility(event.target.value as "ALL" | Visibility)} options={[
+        <div className="catalog-actions"><div className="catalog-actions__buttons"><FurgButton icon="document" onClick={onCreate}>Novo processo</FurgButton><FurgButton icon="upload" onClick={onImport} variant="outlined">Importar processo</FurgButton></div><FurgSelect label="Visibilidade" value={visibility} onChange={(event) => onVisibility(event.target.value as "ALL" | Visibility)} options={[
           { value: "ALL", label: "Todas" }, { value: "PUBLIC", label: "Públicas" }, { value: "INTERNAL", label: "Internas" }, { value: "RESTRICTED", label: "Restritas" },
-        ]} />{offline ? <small>Conecte a API para criar, importar e persistir processos.</small> : null}</div>
+        ]} /></div>
       </header>
       <div className="catalog-facets" aria-label="Agrupar e filtrar o universo institucional">
         <FurgSelect label="Sistema" value={facets.system} onChange={(event) => onFacets({ ...facets, system: event.target.value })} options={[{ value: "ALL", label: "Todos os sistemas" }, ...optionsFor("systems").map((item) => ({ value: item.key, label: item.label }))]} />
@@ -341,7 +351,7 @@ function MapPage({ processes, relations, onOpen }: { processes: ProcessSummary[]
   </div>;
 }
 
-function ProcessDetailPage({ process, view, onView, onAdministerVersion, onProcessUpdated, onProcessRemoved, onRefresh, offline }: { process: ProcessDetail; view: DetailView; onView: (view: DetailView) => void; onAdministerVersion: () => void; onProcessUpdated: (process: ProcessDetail) => void; onProcessRemoved: (processId: string) => void; onRefresh: () => void; offline: boolean }) {
+function ProcessDetailPage({ process, view, onView, onAdministerVersion, onProcessUpdated, onProcessRemoved, onRefresh }: { process: ProcessDetail; view: DetailView; onView: (view: DetailView) => void; onAdministerVersion: () => void; onProcessUpdated: (process: ProcessDetail) => void; onProcessRemoved: (processId: string) => void; onRefresh: () => void }) {
   const location = useLocation();
   const version = process.currentVersion;
   const [editing, setEditing] = useState(false);
@@ -413,7 +423,6 @@ function ProcessDetailPage({ process, view, onView, onAdministerVersion, onProce
 
   async function startEditing() {
     if (!version) return;
-    if (offline) { setFeedback(undefined); setEditing(true); onView("diagram"); return; }
     try {
       const lease = await acquireLease(process.id, version.id);
       setLeaseToken(lease.token);
@@ -432,13 +441,12 @@ function ProcessDetailPage({ process, view, onView, onAdministerVersion, onProce
     setLeaseToken(undefined);
     setFeedback({
       title: "Edição encerrada",
-      message: offline ? "A sessão demonstrativa foi encerrada sem persistir alterações." : "O bloqueio exclusivo foi liberado para outras pessoas.",
+      message: "O bloqueio exclusivo foi liberado para outras pessoas.",
       tone: "info",
     });
   }
 
   async function handleSave(xml: string) {
-    if (offline) throw new Error("O modo de demonstração não persiste alterações. Conecte a API para salvar.");
     if (!version || !leaseToken) throw new Error("Bloqueio de edição ausente.");
     await saveBpmn(process.id, version.id, xml, leaseToken);
     onProcessUpdated({ ...process, bpmnXml: xml, outline: extractBpmnOutline(xml) });
@@ -457,7 +465,7 @@ function ProcessDetailPage({ process, view, onView, onAdministerVersion, onProce
   }
 
   async function runTransition(action: WorkflowAction, noteOverride?: string) {
-    if (!version || offline) return;
+    if (!version) return;
     setTransitioning(action);
     try {
       const note = noteOverride ?? reviewNote;
@@ -491,7 +499,7 @@ function ProcessDetailPage({ process, view, onView, onAdministerVersion, onProce
   }
 
   async function removeDraftVersion(versionId: string, revision: number) {
-    if (offline || deletingVersionId) return;
+    if (deletingVersionId) return;
     if (editing) {
       setFeedback({ title: "Rascunho em edição", message: "Encerre a edição antes de remover uma versão.", tone: "warning" });
       return;
@@ -514,9 +522,9 @@ function ProcessDetailPage({ process, view, onView, onAdministerVersion, onProce
 
   return <><div className="process-detail">
     <Link className="back-link" onClick={(event) => { if (!mayNavigate("Salve o rascunho ou encerre a edição antes de voltar ao catálogo.")) event.preventDefault(); }} to={sectionPaths.catalog}><FurgIcon name="arrow-back" size={18} />Voltar ao catálogo</Link>
-    <header className="process-detail__header"><div><p className="eyebrow">{process.category} · {process.ownerUnit.acronym}</p><h1>{process.title}</h1><p>{process.description}</p><div className="detail-chips"><FurgChip label={statusLabels[version?.status ?? "DRAFT"]} tone={toneByStatus[version?.status ?? "DRAFT"]} /><FurgChip label={version?.perspective === "TO_BE" ? "Cenário futuro" : "Processo atual"} tone="info" /><FurgChip label={process.visibility === "PUBLIC" ? "Público" : process.visibility === "INTERNAL" ? "Interno" : "Restrito"} /></div></div>
-      <div className="detail-actions">{canEdit ? <FurgButton disabled={editing || offline} icon="edit" onClick={() => setEditingMetadata(true)} variant="outlined">Editar dados</FurgButton> : null}{version ? <FurgButton disabled={offline} icon="download" loading={exporting} onClick={() => void exportBundle()} variant="outlined">Exportar pacote</FurgButton> : null}{view === "authoring" && version?.contractVersion === "v2" ? <FurgButton className={`integrity-trigger ${bundleValidation?.valid ? "is-valid" : "is-invalid"}`} disabled={!bundleValidation} onClick={() => setIntegrityOpen(true)} variant="outlined">{integrityButtonLabel(bundleValidation)}</FurgButton> : null}{hasVersionAdministration ? <FurgButton disabled={editing} onClick={() => { setFocusVersionAdministration(true); onAdministerVersion(); }} variant="outlined">Administrar versão</FurgButton> : null}{canEdit ? editing ? <FurgButton onClick={stopEditing} variant="outlined">Encerrar edição</FurgButton> : <FurgButton icon="edit" onClick={startEditing}>Editar diagrama</FurgButton> : null}</div>
-    </header>
+    <div className="process-detail__header"><FurgPageHeader density="compact" description={process.description} eyebrow={`${process.category} - ${process.ownerUnit.acronym}`} status={<div className="detail-chips"><FurgChip label={statusLabels[version?.status ?? "DRAFT"]} tone={toneByStatus[version?.status ?? "DRAFT"]} /><FurgChip label={version?.perspective === "TO_BE" ? "Cenário futuro" : "Processo atual"} tone="info" /><FurgChip label={process.visibility === "PUBLIC" ? "Público" : process.visibility === "INTERNAL" ? "Interno" : "Restrito"} /></div>} title={process.title} />
+      <div className="detail-actions">{canEdit ? <FurgButton disabled={editing} icon="edit" onClick={() => setEditingMetadata(true)} variant="outlined">Editar dados</FurgButton> : null}{version ? <FurgButton icon="download" loading={exporting} onClick={() => void exportBundle()} variant="outlined">Exportar pacote</FurgButton> : null}{view === "authoring" && version?.contractVersion === "v2" ? <FurgButton className={`integrity-trigger ${bundleValidation?.valid ? "is-valid" : "is-invalid"}`} disabled={!bundleValidation} onClick={() => setIntegrityOpen(true)} variant="outlined">{integrityButtonLabel(bundleValidation)}</FurgButton> : null}{hasVersionAdministration ? <FurgButton disabled={editing} onClick={() => { setFocusVersionAdministration(true); onAdministerVersion(); }} variant="outlined">Administrar versão</FurgButton> : null}{canEdit ? editing ? <FurgButton onClick={stopEditing} variant="outlined">Encerrar edição</FurgButton> : <FurgButton icon="edit" onClick={startEditing}>Editar diagrama</FurgButton> : null}</div>
+    </div>
     {feedback ? <FurgMessage title={feedback.title} message={feedback.message} tone={feedback.tone} /> : null}
     <nav className="detail-nav" aria-label="Conteúdo do processo">{(["overview", "diagram", "operations", "structure", "authoring", "versions"] as const).map((item) => <Link aria-current={view === item ? "page" : undefined} key={item} onClick={(event) => { if (item !== view && !mayNavigate("Salve o rascunho ou encerre a edição antes de trocar de aba.")) event.preventDefault(); }} to={processPath(process, item)}>{({ overview: "Visão geral", diagram: "Diagrama", operations: "Rastreabilidade", structure: "Visão textual", authoring: "Autoria", versions: "Versões" })[item]}</Link>)}</nav>
     {reviewActions.length && !editing ? <WorkflowActions actions={reviewActions} note={reviewNote} onNoteChange={setReviewNote} onRun={runTransition} running={transitioning} /> : null}
@@ -526,7 +534,7 @@ function ProcessDetailPage({ process, view, onView, onAdministerVersion, onProce
       : view === "operations" ? <ProcessV2Workspace locator={process.id} />
       : view === "structure" ? <StructuredView process={process} />
       : view === "authoring" ? <Suspense fallback={<FurgProgressIndicator label="Abrindo a mesa de autoria" />}><AuthoringWorkspace onChanged={onRefresh} onValidationChange={setBundleValidation} process={process} /></Suspense>
-      : <VersionsView archiveAllowed={archiveAllowed} archiving={transitioning === "ARCHIVE"} deletingVersionId={deletingVersionId} disabledReason={offline ? "Conecte a API para administrar versões." : editing ? "Encerre a edição antes de administrar versões." : undefined} onArchive={(reason) => runTransition("ARCHIVE", reason)} onDelete={removeDraftVersion} process={process} />}
+      : <VersionsView archiveAllowed={archiveAllowed} archiving={transitioning === "ARCHIVE"} deletingVersionId={deletingVersionId} disabledReason={editing ? "Encerre a edição antes de administrar versões." : undefined} onArchive={(reason) => runTransition("ARCHIVE", reason)} onDelete={removeDraftVersion} process={process} />}
   </div><PackageIntegrityDialog isOpen={integrityOpen} onClose={() => setIntegrityOpen(false)} validation={bundleValidation} />{canEdit ? <EditProcessDialog isOpen={editingMetadata} onClose={() => setEditingMetadata(false)} onUpdated={(updated) => {
     setEditingMetadata(false);
     onProcessUpdated(updated);
@@ -651,6 +659,13 @@ function SoftwarePage() {
 function humanElementType(type: string) {
   const labels: Record<string, string> = { startEvent: "Início", endEvent: "Fim", task: "Atividade", userTask: "Atividade humana", serviceTask: "Atividade automática", exclusiveGateway: "Decisão", callActivity: "Processo chamado", subProcess: "Subprocesso" };
   return labels[type] ?? type;
+}
+
+function ApiUnavailablePage({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return <div className="contained-page not-found-page">
+    <FurgMessage title="API indisponível" message={`O catálogo não pôde ser consultado no PostgreSQL. ${message}`} tone="danger" />
+    <FurgButton icon="sync" onClick={onRetry}>Tentar novamente</FurgButton>
+  </div>;
 }
 
 function NotFoundPage({ message = "O endereço informado não corresponde a uma seção ou processo disponível." }: { message?: string }) {

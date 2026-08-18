@@ -128,6 +128,24 @@ export function BpmnCanvas({ editable, xml, onSave, onDirtyChange, operationalBa
     };
   }, [editable, fullscreenMode]);
 
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || typeof ResizeObserver === "undefined") return;
+    let animationFrame: number | undefined;
+    const observer = new ResizeObserver(() => {
+      if (animationFrame !== undefined) window.cancelAnimationFrame(animationFrame);
+      animationFrame = window.requestAnimationFrame(() => {
+        const canvas = instanceRef.current?.get<any>("canvas");
+        if (canvas) fitBpmnCanvas(canvas, editable ? "viewport" : "height");
+      });
+    });
+    observer.observe(container);
+    return () => {
+      observer.disconnect();
+      if (animationFrame !== undefined) window.cancelAnimationFrame(animationFrame);
+    };
+  }, [editable]);
+
   async function toggleFullscreen() {
     if (fullscreenMode === "native") {
       await document.exitFullscreen().catch(() => setFullscreenMode("none"));

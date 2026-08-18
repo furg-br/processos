@@ -3,14 +3,18 @@ import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { validateProcessBundleV2 } from "../packages/process-bundle/dist/index.js";
 
-const inputPath = resolve(process.argv[2] ?? "artifacts/rsc-as-is/rsc-as-is.process-bundle-v2.zip");
+const requestedInput = process.argv[2] ?? process.env.PROCESS_BUNDLE_INPUT;
+if (!requestedInput) throw new Error("Informe o caminho ou a URL de exportação da API em PROCESS_BUNDLE_INPUT.");
+const inputSource = /^https?:\/\//i.test(requestedInput) ? requestedInput : resolve(requestedInput);
 const outputPath = resolve(process.argv[3] ?? "artifacts/v2-validation-benchmark.json");
 const iterations = Number.parseInt(process.argv[4] ?? "25", 10);
 if (!Number.isInteger(iterations) || iterations < 1 || iterations > 500) {
   throw new Error("Informe entre 1 e 500 iterações.");
 }
 
-const input = await readFile(inputPath);
+const response = /^https?:\/\//i.test(inputSource) ? await fetch(inputSource, { headers: process.env.PROCESSOS_ACCESS_TOKEN ? { Authorization: `Bearer ${process.env.PROCESSOS_ACCESS_TOKEN}` } : undefined }) : undefined;
+if (response && !response.ok) throw new Error(`A API recusou a exportação usada no benchmark (${response.status}).`);
+const input = response ? Buffer.from(await response.arrayBuffer()) : await readFile(inputSource);
 const samplesMs = [];
 let lastReport;
 for (let index = 0; index < iterations; index += 1) {
@@ -25,7 +29,7 @@ const percentile = (value) => ordered[Math.min(ordered.length - 1, Math.ceil(val
 const report = {
   generatedAt: new Date().toISOString(),
   runtime: { node: process.version, platform: process.platform, architecture: process.arch },
-  input: { path: inputPath, bytes: input.byteLength, profile: lastReport?.manifest?.profile },
+  input: { source: inputSource, bytes: input.byteLength, profile: lastReport?.manifest?.profile },
   iterations,
   milliseconds: {
     min: Number(ordered[0].toFixed(2)),

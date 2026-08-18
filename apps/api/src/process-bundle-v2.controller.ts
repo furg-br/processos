@@ -15,7 +15,7 @@ export class ProcessBundleV2Controller {
 
   @Post("process-bundles/imports/:importId/apply")
   @ApiOperation({ summary: "Aplica transacionalmente uma importação v2 validada" })
-  apply(@Param("importId") importId: string, @Body() body: { unitMappings?: Array<{ reference: string; unitId: string; role: "OWNER" | "PARTICIPANT" }>; ownerUnitId?: string }, @Headers() headers: Record<string, string | undefined>) {
+  apply(@Param("importId") importId: string, @Body() body: { unitMappings?: Array<{ reference: string; unitId: string; role: "OWNER" | "PARTICIPANT" }>; ownerUnitId?: string; targetProcessId?: string }, @Headers() headers: Record<string, string | undefined>) {
     return this.bundles.apply(importId, body, headers);
   }
 

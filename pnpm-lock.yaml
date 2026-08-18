@@ -97,8 +97,8 @@ importers:
   apps/web:
     dependencies:
       '@furg/design-system':
-        specifier: file:../../vendor/furg-design-system-0.4.0.tgz
-        version: file:vendor/furg-design-system-0.4.0.tgz(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        specifier: file:../../vendor/furg-design-system-0.5.0.tgz
+        version: file:vendor/furg-design-system-0.5.0.tgz(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@furg/processos-bpmn':
         specifier: workspace:*
         version: link:../../packages/bpmn-extension
@@ -696,12 +696,18 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@furg/design-system@file:vendor/furg-design-system-0.4.0.tgz':
-    resolution: {integrity: sha512-/ipNeVwZEWF/qGdWfJdOBF1fYHzkyLWzbDkKQ3aZyxiMyGytVXi7VB/cvdS2bNuO659IefcxPewWKcqUIZleTw==, tarball: file:vendor/furg-design-system-0.4.0.tgz}
-    version: 0.4.0
+  '@furg/design-system@file:vendor/furg-design-system-0.5.0.tgz':
+    resolution: {integrity: sha512-1KWgxEcnc59/mMJC9MS+Wj27f6p7HCEEMAUgDnoNN2RODt76ExT0E251s2gW5CCCgfJuoEQFu/mJe2nFgoy32A==, tarball: file:vendor/furg-design-system-0.5.0.tgz}
+    version: 0.5.0
     peerDependencies:
       react: ^19.0.0
       react-dom: ^19.0.0
+      react-native: '>=0.85.0'
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
+      react-native:
+        optional: true
 
   '@inquirer/ansi@1.0.2':
     resolution: {integrity: sha512-S8qNSZiYzFd0wAcyG5AXCvUHC5Sr7xpZ9wZ2py9XR88jUz8wooStVx5M6dRzczbBWjic9NP7+rY0Xi7qqK/aMQ==}
@@ -3650,10 +3656,11 @@ snapshots:
   '@esbuild/win32-x64@0.28.1':
     optional: true
 
-  '@furg/design-system@file:vendor/furg-design-system-0.4.0.tgz(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+  '@furg/design-system@file:vendor/furg-design-system-0.5.0.tgz(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
     dependencies:
       qrcode: 1.5.4
       react: 19.2.7
+    optionalDependencies:
       react-dom: 19.2.7(react@19.2.7)
 
   '@inquirer/ansi@1.0.2': {}

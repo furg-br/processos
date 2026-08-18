@@ -1,6 +1,6 @@
 # Operação on-premises
 
-A aplicação não depende de SaaS em runtime. PostgreSQL, armazenamento S3 compatível, API, frontend, schemas, CLI e fixtures podem operar em rede interna. Agentes externos apenas consomem ou produzem arquivos conforme o contrato aberto.
+A aplicação não depende de SaaS em runtime. PostgreSQL, API, frontend, schemas, CLI e fixtures sintéticas podem operar em rede interna. Agentes externos apenas consomem ou produzem pacotes exportados conforme o contrato aberto.
 
 ## Implantação
 
@@ -11,7 +11,7 @@ A aplicação não depende de SaaS em runtime. PostgreSQL, armazenamento S3 comp
 - publique por proxy TLS institucional;
 - configure OIDC/SAML e desative `AUTH_MODE=development`.
 
-O Compose e os Dockerfiles já fixam tag e digest de PostgreSQL, MinIO, Node e Nginx. A atualização de qualquer imagem exige revisão do digest, SBOM e teste de restauração. Em produção, configure o mesmo provedor OIDC genérico nos dois lados:
+O Compose e os Dockerfiles já fixam tag e digest de PostgreSQL, Node e Nginx. A atualização de qualquer imagem exige revisão do digest, SBOM e teste de restauração. Em produção, configure o mesmo provedor OIDC genérico nos dois lados:
 
 - API: `AUTH_MODE=oidc`, `SSO_ISSUER`, `SSO_JWKS_URL`, `SSO_CLIENT_ID`;
 - web: `VITE_OIDC_AUTHORITY`, `VITE_OIDC_CLIENT_ID`, `VITE_OIDC_REDIRECT_URI` e `VITE_OIDC_SCOPE`.
@@ -26,23 +26,21 @@ Backup consistente:
 
 1. pausar publicações/importações ou obter snapshot coordenado;
 2. executar `pg_dump --format=custom`;
-3. copiar o bucket de objetos com versões;
-4. guardar configuração sem segredos e digests das imagens;
-5. registrar release e checksums.
+3. guardar configuração sem segredos e digests das imagens;
+4. registrar release e checksums.
 
 Restauração verificável:
 
 1. restaurar com `pg_restore` em banco vazio;
-2. restaurar objetos;
-3. iniciar a mesma release;
-4. verificar health check, releases e exportação de um v2 publicado;
-5. validar o ZIP pela CLI e comparar seu `bundleHash`.
+2. iniciar a mesma release;
+3. verificar health check, releases e exportação de um v2 publicado;
+4. validar o ZIP pela CLI e comparar seu `bundleHash`.
 
 A existência de backup sem teste periódico de restauração não satisfaz o controle.
 
-Os roteiros `scripts/backup-on-prem.sh` e `scripts/restore-test-on-prem.sh` tornam o procedimento repetível. O segundo exige banco terminado em `_restore_test` e bucket S3 com o marcador DNS válido `-restore-test`, recusa alvos sem essas marcas e preserva o ambiente restaurado para inspeção. Ele não deve apontar para produção.
+Os roteiros `scripts/backup-on-prem.sh` e `scripts/restore-test-on-prem.sh` tornam o procedimento repetível. O segundo exige banco terminado em `_restore_test`, recusa outros alvos e preserva o ambiente restaurado para inspeção. Ele não deve apontar para produção.
 
-O ciclo de referência foi executado em 16 de agosto de 2026 com PostgreSQL e MinIO ativos. A release RSC, o ZIP persistido no banco e a cópia no armazenamento de objetos mantiveram o mesmo SHA-256 após restauração isolada. O relatório está em `artifacts/operational-validation/restore-report.json`. Cada ambiente produtivo continua obrigado a repetir periodicamente esse controle com seus próprios volumes, chaves e política de retenção.
+O ciclo histórico de referência foi executado em 16 de agosto de 2026 antes da consolidação no PostgreSQL. O procedimento atual deve comprovar que a release, seus recursos e o ZIP persistido mantêm o mesmo SHA-256 após restauração isolada. Cada ambiente continua obrigado a repetir periodicamente esse controle com seus próprios volumes e política de retenção.
 
 ## Observabilidade e segurança
 

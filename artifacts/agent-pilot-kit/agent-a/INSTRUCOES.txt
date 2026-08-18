@@ -1,4 +1,0 @@
-Entregue esta pasta a um único agente sem fornecer contexto adicional ou o diretório reviewer-only.
-A resposta deve ser somente um JSON válido conforme result.schema.json.
-Use um agent.id estável e distinto do agente recebido na outra pasta (agent-a).
-Não corrija a resposta manualmente.

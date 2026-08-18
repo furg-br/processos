@@ -100,13 +100,13 @@ node packages/process-bundle/dist/cli.js migrate-v1 caminho/v1.zip caminho/v2.zi
 
 O migrador gera perfil `DOCUMENTARY` e relata perdas. UUIDs de operação do v1 não são promovidos a definições portáveis por inferência.
 
-## Fixtures oficiais
+## Fonte operacional e fixtures
 
-- `artifacts/rsc-as-is/rsc-as-is.process-bundle-v2.zip`: engenharia reversa, perfil `IMPLEMENTABLE`.
-- `artifacts/examples/emprestimo-biblioteca/emprestimo-biblioteca.process-bundle-v2.zip`: processo público, presencial e manual, perfil `ANALYZABLE`.
-- `artifacts/rsc-as-is/rsc-migrated-v1-to-v2.zip`: resultado documental do migrador.
+Versões reais, incluindo o RSC, residem no PostgreSQL e são acessadas pela API. O repositório não mantém uma árvore paralela de JSON, BPMN e ZIP como fonte de processo. Um pacote portável deve ser obtido pela rota de exportação ou pelo comando `pnpm bundle:export`.
 
-O RSC comprova software, formulários, dados, acesso, decisões, estados, cron, integração e divergências. O empréstimo comprova que um processo sem aplicação nem automação não precisa ser deformado para caber no contrato.
+Os testes usam uma fixture sintética construída em memória por `@furg/processos-bundle/testing`. Ela existe apenas para validar hashes, referências, migração, visibilidade e projeção pública. Não representa processo institucional e não pode ser importada como cadastro oficial.
+
+Os relatórios de pilotos anteriores permanecem como evidência histórica. Eles não são usados pelo runtime nem alimentam a interface.
 
 ## Reserva de interoperabilidade com instâncias
 

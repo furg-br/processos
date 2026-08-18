@@ -44,7 +44,35 @@ describe("contratos públicos", () => {
   it("publica JSON Schema consumível sem depender do runtime Zod", async () => {
     const packageRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
     const schema = JSON.parse(await readFile(resolve(packageRoot, "schemas/v2/process-definition.schema.json"), "utf8"));
-    const fixture = JSON.parse(await readFile(resolve(packageRoot, "../../artifacts/rsc-as-is/v2/process/process.json"), "utf8"));
+    const fixture = {
+      apiVersion: "processos.furg.br/v2",
+      kind: "ProcessDefinition",
+      metadata: {
+        id: "90000000-0000-4000-8000-000000000001",
+        key: "processo.teste",
+        version: "1",
+        visibility: "INSTITUTIONAL",
+        status: "DRAFT",
+        title: "Processo sintético",
+        createdAt: "2026-01-01T12:00:00.000Z",
+        updatedAt: "2026-01-01T12:00:00.000Z",
+        labels: {},
+      },
+      spec: {
+        definitionId: "91000000-0000-4000-8000-000000000001",
+        processVersionId: "92000000-0000-4000-8000-000000000001",
+        bindingSetVersionId: "93000000-0000-4000-8000-000000000001",
+        releaseId: "94000000-0000-4000-8000-000000000001",
+        profile: "DOCUMENTARY",
+        perspective: "AS_IS",
+        ownerUnitRef: "unidade.teste",
+        participantUnitRefs: [],
+        taxonomyRefs: [],
+        audienceRefs: [],
+        bpmnPath: "process/process.bpmn",
+        normativeBasisRefs: [],
+      },
+    };
     const ajv = new Ajv2020({ allErrors: true, strict: false });
     addFormats(ajv);
     const validate = ajv.compile(schema);

@@ -1,8 +1,7 @@
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { filterResourcesForAudience, ProcessBundleV2Service, processMeaningHash } from "./process-bundle-v2.service.js";
 import { validateProcessBundleV2 } from "@furg/processos-bundle";
+import { buildSyntheticProcessBundleV2 } from "@furg/processos-bundle/testing";
 
 describe("quarentena de ProcessBundle v2", () => {
   it("bloqueia a persistência quando a alteração torna o pacote inconsistente", () => {
@@ -22,21 +21,21 @@ describe("quarentena de ProcessBundle v2", () => {
       bundleResource: { findFirst: vi.fn().mockResolvedValue(null) },
       bundleImportJob: { create },
       organizationUnitReference: { findMany: vi.fn().mockResolvedValue([
-        { reference: "unidade.progep", unit: { id: "progep", externalId: "FURG-PROGEP", acronym: "PROGEP", name: "Pró-Reitoria de Gestão e Desenvolvimento de Pessoas" } },
-        { reference: "unidade.comissao.rsc", unit: { id: "crsc", externalId: "FURG-CRSC", acronym: "CRSC", name: "Comissão RSC-PCCTAE" } },
+        { reference: "unidade.teste", unit: { id: "teste", externalId: "FURG-TESTE", acronym: "TESTE", name: "Unidade de Teste" } },
+        { reference: "unidade.apoio", unit: { id: "apoio", externalId: "FURG-APOIO", acronym: "APOIO", name: "Unidade de Apoio" } },
       ]) },
     };
     const service = new ProcessBundleV2Service(prisma as never);
-    const bundle = await readFile(resolve(import.meta.dirname, "../../../artifacts/rsc-as-is/rsc-as-is.process-bundle-v2.zip"));
+    const bundle = await buildSyntheticProcessBundleV2();
 
-    const result = await service.dryRun({ fileName: "rsc.zip", contentBase64: bundle.toString("base64") });
+    const result = await service.dryRun({ fileName: "processo-sintetico.zip", contentBase64: bundle.toString("base64") });
 
     expect(result).toMatchObject({ importId: "import-id", valid: true, readyToApply: true, requiresCgtiApproval: true, technicalBindingsWillBe: "PENDING_CGTI_APPROVAL" });
     expect(result.institutionalUnitMappings).toMatchObject([
-      { reference: "unidade.progep", role: "OWNER", status: "RESOLVED", resolvedUnit: { externalId: "FURG-PROGEP" } },
-      { reference: "unidade.comissao.rsc", role: "PARTICIPANT", status: "RESOLVED", resolvedUnit: { externalId: "FURG-CRSC" } },
+      { reference: "unidade.teste", role: "OWNER", status: "RESOLVED", resolvedUnit: { externalId: "FURG-TESTE" } },
+      { reference: "unidade.apoio", role: "PARTICIPANT", status: "RESOLVED", resolvedUnit: { externalId: "FURG-APOIO" } },
     ]);
-    expect(result.coverage).toMatchObject({ bpmnActivities: 18, completeMappings: 18, operations: 17, forms: 11, decisions: 3 });
+    expect(result.coverage).toMatchObject({ bpmnActivities: 2, completeMappings: 2, operations: 2, forms: 1, decisions: 1 });
     expect(create).toHaveBeenCalledOnce();
     expect((create.mock.calls[0]?.[0] as any).data.status).toBe("VALIDATED");
   });
@@ -89,7 +88,7 @@ describe("quarentena de ProcessBundle v2", () => {
   });
 
   it("separa alteração técnica de mudança no significado do processo", async () => {
-    const bundle = await readFile(resolve(import.meta.dirname, "../../../artifacts/rsc-as-is/rsc-as-is.process-bundle-v2.zip"));
+    const bundle = await buildSyntheticProcessBundleV2();
     const report = await validateProcessBundleV2(bundle);
     const technicalChange = structuredClone(report.resources) as any[];
     technicalChange.find((item) => item.kind === "SoftwareCatalog").spec.operations[0].path = "/rota-refatorada";
@@ -119,7 +118,7 @@ describe("quarentena de ProcessBundle v2", () => {
   });
 
   it("não entrega recursos técnicos ou restritos na projeção institucional", async () => {
-    const bundle = await readFile(resolve(import.meta.dirname, "../../../artifacts/rsc-as-is/rsc-as-is.process-bundle-v2.zip"));
+    const bundle = await buildSyntheticProcessBundleV2();
     const report = await validateProcessBundleV2(bundle);
 
     const institutional = filterResourcesForAudience(report.resources, "INSTITUTIONAL");

@@ -8,6 +8,7 @@
     "vendor:design-system": "node scripts/vendor-design-system.mjs",
     "sbom": "node scripts/generate-sbom.mjs",
     "benchmark:v2": "node scripts/benchmark-v2.mjs",
+    "bundle:export": "node scripts/export-process-bundle.mjs",
     "agent-pilot:prepare": "node experiments/agent-consumption/prepare-kit.mjs",
     "build": "pnpm -r --if-present build",
     "dev": "node scripts/pnpm-with-env.mjs --parallel --filter @furg/processos-api --filter @furg/processos-web dev",
