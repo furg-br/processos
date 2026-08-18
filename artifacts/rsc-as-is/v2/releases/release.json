@@ -1,0 +1,27 @@
+{
+  "apiVersion": "processos.furg.br/v2",
+  "kind": "ProcessRelease",
+  "metadata": {
+    "id": "40000000-0000-4000-8000-000000000012",
+    "key": "processo.rsc.pcctae.release.as-is.1",
+    "version": "2.0.0",
+    "visibility": "INSTITUTIONAL",
+    "status": "DRAFT",
+    "title": "Release AS-IS do RSC",
+    "createdAt": "2026-08-16T21:00:00.000Z",
+    "updatedAt": "2026-08-16T21:00:00.000Z",
+    "labels": {
+      "perspective": "AS_IS",
+      "origin": "reverse-engineering"
+    }
+  },
+  "spec": {
+    "releaseId": "35000000-0000-4000-8000-000000000001",
+    "processDefinitionRef": "processo.rsc.pcctae",
+    "processVersionId": "33000000-0000-4000-8000-000000000001",
+    "bindingSetVersionId": "34000000-0000-4000-8000-000000000001",
+    "sourceArtifactRefs": [
+      "fonte.codigo.rsc"
+    ]
+  }
+}

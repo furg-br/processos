@@ -1,0 +1,252 @@
+{
+  "$ref": "#/definitions/ProvenanceCatalog",
+  "definitions": {
+    "ProvenanceCatalog": {
+      "type": "object",
+      "properties": {
+        "apiVersion": {
+          "type": "string",
+          "const": "processos.furg.br/v2"
+        },
+        "kind": {
+          "type": "string",
+          "const": "ProvenanceCatalog"
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "key": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 200,
+              "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$",
+              "errorMessage": {
+                "pattern": "Use uma chave semântica estável em minúsculas."
+              }
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1
+            },
+            "visibility": {
+              "type": "string",
+              "enum": [
+                "PUBLIC",
+                "INSTITUTIONAL",
+                "TECHNICAL",
+                "RESTRICTED"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "DRAFT",
+                "IN_REVIEW",
+                "PUBLISHED",
+                "SUPERSEDED",
+                "ARCHIVED"
+              ],
+              "default": "DRAFT"
+            },
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 240
+            },
+            "description": {
+              "type": "string",
+              "maxLength": 2000
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updatedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "labels": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "default": {}
+            }
+          },
+          "required": [
+            "id",
+            "key",
+            "version",
+            "visibility",
+            "title",
+            "createdAt",
+            "updatedAt"
+          ],
+          "additionalProperties": false
+        },
+        "spec": {
+          "type": "object",
+          "properties": {
+            "sourceArtifacts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "$ref": "#/definitions/ProvenanceCatalog/properties/metadata/properties/key"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "SOURCE_CODE",
+                      "DATABASE",
+                      "TEST",
+                      "NORM",
+                      "PROCEDURE",
+                      "INTERVIEW",
+                      "RUNTIME_EVENT",
+                      "SCREENSHOT"
+                    ]
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "location": {
+                    "type": "object",
+                    "properties": {
+                      "repository": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "commit": {
+                        "type": "string",
+                        "minLength": 7
+                      },
+                      "tag": {
+                        "type": "string"
+                      },
+                      "pullRequest": {
+                        "type": "string"
+                      },
+                      "path": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "startLine": {
+                        "type": "integer",
+                        "exclusiveMinimum": true,
+                        "minimum": 0
+                      },
+                      "endLine": {
+                        "type": "integer",
+                        "exclusiveMinimum": true,
+                        "minimum": 0
+                      },
+                      "url": {
+                        "type": "string",
+                        "format": "uri"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "capturedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                },
+                "required": [
+                  "key",
+                  "kind",
+                  "label",
+                  "location",
+                  "capturedAt"
+                ],
+                "additionalProperties": false
+              },
+              "default": []
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "$ref": "#/definitions/ProvenanceCatalog/properties/metadata/properties/key"
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "OBSERVED",
+                      "IMPLEMENTED",
+                      "DOCUMENTED",
+                      "INFERRED",
+                      "VALIDATED",
+                      "CONTESTED"
+                    ]
+                  },
+                  "confidence": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "sourceArtifactRefs": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/definitions/ProvenanceCatalog/properties/metadata/properties/key"
+                    },
+                    "minItems": 1
+                  },
+                  "validatesRefs": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/definitions/ProvenanceCatalog/properties/metadata/properties/key"
+                    },
+                    "default": []
+                  },
+                  "validatedBy": {
+                    "type": "string"
+                  },
+                  "validatedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "discrepancy": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "key",
+                  "label",
+                  "status",
+                  "confidence",
+                  "sourceArtifactRefs"
+                ],
+                "additionalProperties": false
+              },
+              "default": []
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "apiVersion",
+        "kind",
+        "metadata",
+        "spec"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processos.furg.br/schemas/v2/provenance.schema.json"
+}

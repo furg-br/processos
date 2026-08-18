@@ -1,0 +1,47 @@
+{
+  "executedAt": "2026-08-16T20:11:41.8104726Z",
+  "result": "PASSED",
+  "composeRuntime": {
+    "imagesBuilt": ["processos-furg-api:v2", "processos-furg-web:v2"],
+    "databaseHealth": "healthy",
+    "apiHealth": "healthy",
+    "webStatus": 200,
+    "reverseProxyHealth": "ok",
+    "publicProjectionPhases": 7,
+    "publicProjectionLeaksTechnicalOperations": false,
+    "runtimePackageDownloadRequired": false
+  },
+  "environment": {
+    "databaseEngine": "PostgreSQL 17.10",
+    "objectStorage": "MinIO RELEASE.2025-09-07T16-13-09Z",
+    "restoreDatabase": "processos_restore_test",
+    "restoreBucket": "processos-restore-test-20260816"
+  },
+  "backup": {
+    "databaseBytes": 204811,
+    "objectCount": 1,
+    "checksumsVerifiedBeforeRestore": true
+  },
+  "restoredState": {
+    "processes": 6,
+    "versions": 7,
+    "releases": 1,
+    "bindingSets": 1,
+    "releaseId": "35000000-0000-4000-8000-000000000001"
+  },
+  "canonicalBundle": {
+    "processVersionId": "33000000-0000-4000-8000-000000000001",
+    "bindingSetVersionId": "34000000-0000-4000-8000-000000000001",
+    "bytes": 28612,
+    "sha256": "77d238b4f9a709afc34e09cb5a5f194b8ef5688ab90e5563199a423ea13b072e",
+    "databaseExportMatchesBeforeRestore": true,
+    "databaseExportMatchesAfterRestore": true,
+    "restoredObjectMatches": true,
+    "contractValidation": "valid",
+    "completeMappings": 18
+  },
+  "notes": [
+    "Os alvos restaurados foram preservados para inspeção.",
+    "O teste corrigiu a convenção de bucket para nomes DNS com -restore-test."
+  ]
+}

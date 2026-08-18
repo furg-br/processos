@@ -1,0 +1,201 @@
+{
+  "$ref": "#/definitions/CommunicationCatalog",
+  "definitions": {
+    "CommunicationCatalog": {
+      "type": "object",
+      "properties": {
+        "apiVersion": {
+          "type": "string",
+          "const": "processos.furg.br/v2"
+        },
+        "kind": {
+          "type": "string",
+          "const": "CommunicationCatalog"
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "key": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 200,
+              "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$",
+              "errorMessage": {
+                "pattern": "Use uma chave semântica estável em minúsculas."
+              }
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1
+            },
+            "visibility": {
+              "type": "string",
+              "enum": [
+                "PUBLIC",
+                "INSTITUTIONAL",
+                "TECHNICAL",
+                "RESTRICTED"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "DRAFT",
+                "IN_REVIEW",
+                "PUBLISHED",
+                "SUPERSEDED",
+                "ARCHIVED"
+              ],
+              "default": "DRAFT"
+            },
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 240
+            },
+            "description": {
+              "type": "string",
+              "maxLength": 2000
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updatedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "labels": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "default": {}
+            }
+          },
+          "required": [
+            "id",
+            "key",
+            "version",
+            "visibility",
+            "title",
+            "createdAt",
+            "updatedAt"
+          ],
+          "additionalProperties": false
+        },
+        "spec": {
+          "type": "object",
+          "properties": {
+            "templates": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "$ref": "#/definitions/CommunicationCatalog/properties/metadata/properties/key"
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "channel": {
+                    "type": "string",
+                    "enum": [
+                      "EMAIL",
+                      "IN_APP",
+                      "SMS",
+                      "DOCUMENT",
+                      "OTHER"
+                    ]
+                  },
+                  "templatePath": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "classification": {
+                    "$ref": "#/definitions/CommunicationCatalog/properties/metadata/properties/visibility"
+                  }
+                },
+                "required": [
+                  "key",
+                  "label",
+                  "channel",
+                  "classification"
+                ],
+                "additionalProperties": false
+              },
+              "default": []
+            },
+            "notifications": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "$ref": "#/definitions/CommunicationCatalog/properties/metadata/properties/key"
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "trigger": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "recipientRefs": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/definitions/CommunicationCatalog/properties/metadata/properties/key"
+                    },
+                    "minItems": 1
+                  },
+                  "templateRef": {
+                    "$ref": "#/definitions/CommunicationCatalog/properties/metadata/properties/key"
+                  },
+                  "activityRefs": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/definitions/CommunicationCatalog/properties/metadata/properties/key"
+                    },
+                    "default": []
+                  },
+                  "evidenceRefs": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/definitions/CommunicationCatalog/properties/metadata/properties/key"
+                    },
+                    "default": []
+                  }
+                },
+                "required": [
+                  "key",
+                  "label",
+                  "trigger",
+                  "recipientRefs",
+                  "templateRef"
+                ],
+                "additionalProperties": false
+              },
+              "default": []
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "apiVersion",
+        "kind",
+        "metadata",
+        "spec"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processos.furg.br/schemas/v2/communications.schema.json"
+}

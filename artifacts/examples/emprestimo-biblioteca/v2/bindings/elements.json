@@ -1,0 +1,46 @@
+{
+  "apiVersion": "processos.furg.br/v2",
+  "kind": "ElementBindingCatalog",
+  "metadata": {
+    "id": "50000000-0000-4000-8000-000000000003",
+    "key": "processo.biblioteca.emprestimo.elementos",
+    "version": "1.0.0",
+    "visibility": "PUBLIC",
+    "status": "DRAFT",
+    "title": "Elementos do empréstimo",
+    "createdAt": "2026-08-16T21:00:00.000Z",
+    "updatedAt": "2026-08-16T21:00:00.000Z",
+    "labels": {}
+  },
+  "spec": {
+    "elements": [
+      {
+        "bpmnElementId": "Activity_Present",
+        "semanticId": "biblioteca.usuario.apresentar.material",
+        "elementType": "manualTask",
+        "label": "Apresentar identificação e material no balcão",
+        "phaseRef": "fase.solicitacao",
+        "visibility": "PUBLIC",
+        "publicLabel": "Apresentar identificação e material no balcão"
+      },
+      {
+        "bpmnElementId": "Activity_Check",
+        "semanticId": "biblioteca.atendente.conferir.condicoes",
+        "elementType": "manualTask",
+        "label": "Conferir vínculo e condições de empréstimo",
+        "phaseRef": "fase.conferencia",
+        "visibility": "PUBLIC",
+        "publicLabel": "Conferir vínculo e condições de empréstimo"
+      },
+      {
+        "bpmnElementId": "Activity_Deliver",
+        "semanticId": "biblioteca.atendente.entregar.material",
+        "elementType": "manualTask",
+        "label": "Entregar material e informar data de devolução",
+        "phaseRef": "fase.conferencia",
+        "visibility": "PUBLIC",
+        "publicLabel": "Entregar material e informar data de devolução"
+      }
+    ]
+  }
+}

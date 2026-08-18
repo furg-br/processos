@@ -1,0 +1,167 @@
+{
+  "$ref": "#/definitions/DataAssetCatalog",
+  "definitions": {
+    "DataAssetCatalog": {
+      "type": "object",
+      "properties": {
+        "apiVersion": {
+          "type": "string",
+          "const": "processos.furg.br/v2"
+        },
+        "kind": {
+          "type": "string",
+          "const": "DataAssetCatalog"
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "key": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 200,
+              "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$",
+              "errorMessage": {
+                "pattern": "Use uma chave semântica estável em minúsculas."
+              }
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1
+            },
+            "visibility": {
+              "type": "string",
+              "enum": [
+                "PUBLIC",
+                "INSTITUTIONAL",
+                "TECHNICAL",
+                "RESTRICTED"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "DRAFT",
+                "IN_REVIEW",
+                "PUBLISHED",
+                "SUPERSEDED",
+                "ARCHIVED"
+              ],
+              "default": "DRAFT"
+            },
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 240
+            },
+            "description": {
+              "type": "string",
+              "maxLength": 2000
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updatedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "labels": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "default": {}
+            }
+          },
+          "required": [
+            "id",
+            "key",
+            "version",
+            "visibility",
+            "title",
+            "createdAt",
+            "updatedAt"
+          ],
+          "additionalProperties": false
+        },
+        "spec": {
+          "type": "object",
+          "properties": {
+            "assets": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "$ref": "#/definitions/DataAssetCatalog/properties/metadata/properties/key"
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "BUSINESS_CONCEPT",
+                      "INFORMATION_ASSET",
+                      "DOCUMENT",
+                      "FILE",
+                      "REFERENCE_CATALOG"
+                    ]
+                  },
+                  "ownerUnitRef": {
+                    "$ref": "#/definitions/DataAssetCatalog/properties/metadata/properties/key"
+                  },
+                  "stewardRef": {
+                    "$ref": "#/definitions/DataAssetCatalog/properties/metadata/properties/key"
+                  },
+                  "classification": {
+                    "$ref": "#/definitions/DataAssetCatalog/properties/metadata/properties/visibility"
+                  },
+                  "schemaPath": {
+                    "type": "string"
+                  },
+                  "authoritativeSourceRef": {
+                    "$ref": "#/definitions/DataAssetCatalog/properties/metadata/properties/key"
+                  },
+                  "retentionPolicy": {
+                    "type": "string"
+                  },
+                  "evidenceRefs": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/definitions/DataAssetCatalog/properties/metadata/properties/key"
+                    },
+                    "default": []
+                  }
+                },
+                "required": [
+                  "key",
+                  "label",
+                  "kind",
+                  "classification"
+                ],
+                "additionalProperties": false
+              },
+              "default": []
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "apiVersion",
+        "kind",
+        "metadata",
+        "spec"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processos.furg.br/schemas/v2/data-assets.schema.json"
+}

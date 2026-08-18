@@ -1,0 +1,184 @@
+{
+  "apiVersion": "processos.furg.br/v2",
+  "kind": "ElementBindingCatalog",
+  "metadata": {
+    "id": "40000000-0000-4000-8000-000000000003",
+    "key": "processo.rsc.pcctae.elementos",
+    "version": "2.0.0",
+    "visibility": "TECHNICAL",
+    "status": "DRAFT",
+    "title": "Identidades semânticas dos elementos BPMN",
+    "createdAt": "2026-08-16T21:00:00.000Z",
+    "updatedAt": "2026-08-16T21:00:00.000Z",
+    "labels": {
+      "perspective": "AS_IS",
+      "origin": "reverse-engineering"
+    }
+  },
+  "spec": {
+    "elements": [
+      {
+        "bpmnElementId": "Activity_Instruct",
+        "semanticId": "rsc.pedido.instruir",
+        "elementType": "userTask",
+        "label": "Criar e instruir pedido em rascunho",
+        "phaseRef": "fase.requerimento",
+        "visibility": "INSTITUTIONAL",
+        "publicLabel": "Criar e instruir pedido em rascunho"
+      },
+      {
+        "bpmnElementId": "Activity_Submit",
+        "semanticId": "rsc.pedido.enviar.para.avaliacao",
+        "elementType": "userTask",
+        "label": "Enviar pedido para avaliação",
+        "phaseRef": "fase.requerimento",
+        "visibility": "INSTITUTIONAL",
+        "publicLabel": "Enviar pedido para avaliação"
+      },
+      {
+        "bpmnElementId": "Activity_Assign",
+        "semanticId": "rsc.comissao.atribuir.responsavel",
+        "elementType": "userTask",
+        "label": "Atribuir responsável pela avaliação",
+        "phaseRef": "fase.analise",
+        "visibility": "INSTITUTIONAL",
+        "publicLabel": "Atribuir responsável pela avaliação"
+      },
+      {
+        "bpmnElementId": "Activity_Analyze",
+        "semanticId": "rsc.comissao.analisar.itens",
+        "elementType": "userTask",
+        "label": "Analisar itens e preparar avaliação",
+        "phaseRef": "fase.analise",
+        "visibility": "INSTITUTIONAL",
+        "publicLabel": "Analisar itens e preparar avaliação"
+      },
+      {
+        "bpmnElementId": "Activity_OpenDiligence",
+        "semanticId": "rsc.comissao.abrir.diligencia",
+        "elementType": "userTask",
+        "label": "Abrir diligência seletiva de 60 dias",
+        "phaseRef": "fase.diligencia",
+        "visibility": "INSTITUTIONAL",
+        "publicLabel": "Abrir diligência seletiva de 60 dias"
+      },
+      {
+        "bpmnElementId": "Activity_RespondDiligence",
+        "semanticId": "rsc.servidor.responder.diligencia",
+        "elementType": "userTask",
+        "label": "Corrigir somente alvos liberados e responder",
+        "phaseRef": "fase.diligencia",
+        "visibility": "INSTITUTIONAL",
+        "publicLabel": "Corrigir somente alvos liberados e responder"
+      },
+      {
+        "bpmnElementId": "Activity_FinalOpinion",
+        "semanticId": "rsc.comissao.registrar.parecer.final",
+        "elementType": "userTask",
+        "label": "Registrar Parecer final deferindo ou indeferindo",
+        "phaseRef": "fase.parecer",
+        "visibility": "INSTITUTIONAL",
+        "publicLabel": "Registrar Parecer final deferindo ou indeferindo"
+      },
+      {
+        "bpmnElementId": "Activity_Accompany",
+        "semanticId": "rsc.comissao.acompanhar.envio.sei",
+        "elementType": "userTask",
+        "label": "Iniciar ou acompanhar envio ao SEI",
+        "phaseRef": "fase.envio.sei",
+        "visibility": "INSTITUTIONAL",
+        "publicLabel": "Iniciar ou acompanhar envio ao SEI"
+      },
+      {
+        "bpmnElementId": "Activity_ConfirmRetry",
+        "semanticId": "rsc.comissao.confirmar.retentativa.sei",
+        "elementType": "userTask",
+        "label": "Verificar SEI e confirmar nova tentativa",
+        "phaseRef": "fase.envio.sei",
+        "visibility": "INSTITUTIONAL",
+        "publicLabel": "Verificar SEI e confirmar nova tentativa"
+      },
+      {
+        "bpmnElementId": "Activity_Protocol",
+        "semanticId": "rsc.pedido.validar.protocolar.publicar",
+        "elementType": "serviceTask",
+        "label": "Validar, protocolar e publicar memorial",
+        "phaseRef": "fase.protocolo",
+        "visibility": "INSTITUTIONAL",
+        "publicLabel": "Validar, protocolar e publicar memorial"
+      },
+      {
+        "bpmnElementId": "Activity_RecordDiligence",
+        "semanticId": "rsc.sistema.registrar.diligencia",
+        "elementType": "serviceTask",
+        "label": "Bloquear escopo e notificar servidor",
+        "phaseRef": "fase.diligencia",
+        "visibility": "INSTITUTIONAL",
+        "publicLabel": "Bloquear escopo e notificar servidor"
+      },
+      {
+        "bpmnElementId": "Activity_ValidateResponse",
+        "semanticId": "rsc.sistema.validar.resposta.diligencia",
+        "elementType": "serviceTask",
+        "label": "Versionar correções e retornar para análise",
+        "phaseRef": "fase.diligencia",
+        "visibility": "INSTITUTIONAL",
+        "publicLabel": "Versionar correções e retornar para análise"
+      },
+      {
+        "bpmnElementId": "Activity_AutoDeny",
+        "semanticId": "rsc.sistema.indeferir.diligencia.expirada",
+        "elementType": "serviceTask",
+        "label": "Indeferir automaticamente por prazo",
+        "phaseRef": "fase.diligencia",
+        "visibility": "TECHNICAL",
+        "publicLabel": "Indeferir automaticamente por prazo"
+      },
+      {
+        "bpmnElementId": "Activity_Freeze",
+        "semanticId": "rsc.sistema.gerar.dossie.final",
+        "elementType": "serviceTask",
+        "label": "Gerar e congelar dossiê final",
+        "phaseRef": "fase.parecer",
+        "visibility": "INSTITUTIONAL",
+        "publicLabel": "Gerar e congelar dossiê final"
+      },
+      {
+        "bpmnElementId": "Activity_SendSei",
+        "semanticId": "rsc.sistema.enviar.dossie.sei",
+        "elementType": "serviceTask",
+        "label": "Criar processo restrito e incluir documentos",
+        "phaseRef": "fase.envio.sei",
+        "visibility": "INSTITUTIONAL",
+        "publicLabel": "Criar processo restrito e incluir documentos"
+      },
+      {
+        "bpmnElementId": "Activity_Retry",
+        "semanticId": "rsc.sistema.retentar.envio.sei",
+        "elementType": "serviceTask",
+        "label": "Retomar envio sem duplicar documentos",
+        "phaseRef": "fase.envio.sei",
+        "visibility": "INSTITUTIONAL",
+        "publicLabel": "Retomar envio sem duplicar documentos"
+      },
+      {
+        "bpmnElementId": "Activity_RouteProgep",
+        "semanticId": "rsc.progep.receber.processo.sei",
+        "elementType": "sendTask",
+        "label": "Tramitar processo para a PROGEP",
+        "phaseRef": "fase.entrega.progep",
+        "visibility": "INSTITUTIONAL",
+        "publicLabel": "Tramitar processo para a PROGEP"
+      },
+      {
+        "bpmnElementId": "Activity_ReceiveSei",
+        "semanticId": "rsc.sei.receber.dossie",
+        "elementType": "receiveTask",
+        "label": "Receber dossiê nato-digital no SEI",
+        "phaseRef": "fase.envio.sei",
+        "visibility": "INSTITUTIONAL",
+        "publicLabel": "Receber dossiê nato-digital no SEI"
+      }
+    ]
+  }
+}

@@ -1,4 +1,5 @@
 import type { BpmnOutlineElement } from "@furg/processos-contracts";
+import BpmnModdle from "bpmn-moddle";
 import { XMLParser } from "fast-xml-parser";
 
 export const furgModdleDescriptor = {
@@ -151,6 +152,26 @@ export function validateBpmnXml(xml: string, continuous = false): BpmnValidation
     if (element.type.endsWith("Gateway") && element.name.includes("sem nome")) {
       issues.push({ code: "unnamed-gateway", elementId: element.id, severity: "warning", message: "Nomeie o gateway como a pergunta que orienta a decisão." });
     }
+  }
+  return issues;
+}
+
+/** Valida o XML pelo metamodelo BPMN 2.0 além das regras editoriais FURG. */
+export async function validateBpmnModel(xml: string, continuous = false): Promise<BpmnValidationIssue[]> {
+  const issues = validateBpmnXml(xml, continuous);
+  if (issues.some((issue) => issue.code === "invalid-xml")) return issues;
+  try {
+    const moddle = new BpmnModdle({ furg: furgModdleDescriptor });
+    const result = await moddle.fromXML(xml, "bpmn:Definitions");
+    if (result.rootElement?.$type !== "bpmn:Definitions") {
+      issues.push({ code: "invalid-root", severity: "error", message: "O elemento raiz deve ser bpmn:Definitions." });
+    }
+    if (!result.rootElement?.rootElements?.length) {
+      issues.push({ code: "missing-root-element", severity: "error", message: "A definição BPMN não contém processo ou colaboração." });
+    }
+    for (const warning of result.warnings ?? []) issues.push({ code: "metamodel-warning", severity: "warning", message: warning.message });
+  } catch (error) {
+    issues.push({ code: "metamodel-invalid", severity: "error", message: error instanceof Error ? error.message : "O XML não é compatível com o metamodelo BPMN 2.0." });
   }
   return issues;
 }

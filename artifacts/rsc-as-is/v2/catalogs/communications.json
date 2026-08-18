@@ -1,0 +1,51 @@
+{
+  "apiVersion": "processos.furg.br/v2",
+  "kind": "CommunicationCatalog",
+  "metadata": {
+    "id": "40000000-0000-4000-8000-000000000016",
+    "key": "processo.rsc.pcctae.comunicacoes",
+    "version": "2.0.0",
+    "visibility": "TECHNICAL",
+    "status": "DRAFT",
+    "title": "Notificações e templates do RSC",
+    "createdAt": "2026-08-16T21:00:00.000Z",
+    "updatedAt": "2026-08-16T21:00:00.000Z",
+    "labels": {
+      "perspective": "AS_IS",
+      "origin": "reverse-engineering"
+    }
+  },
+  "spec": {
+    "templates": [
+      {
+        "key": "template.rsc.diligencia.aberta",
+        "label": "Aviso de diligência aberta",
+        "channel": "EMAIL",
+        "classification": "INSTITUTIONAL"
+      },
+      {
+        "key": "template.rsc.memorial.publicado",
+        "label": "Memorial publicado",
+        "channel": "DOCUMENT",
+        "classification": "RESTRICTED"
+      }
+    ],
+    "notifications": [
+      {
+        "key": "notificacao.rsc.diligencia.aberta",
+        "label": "Notificar servidor sobre diligência",
+        "trigger": "Diligência registrada",
+        "recipientRefs": [
+          "ator.servidor"
+        ],
+        "templateRef": "template.rsc.diligencia.aberta",
+        "activityRefs": [
+          "rsc.sistema.registrar.diligencia"
+        ],
+        "evidenceRefs": [
+          "evidencia.rsc.implementacao"
+        ]
+      }
+    ]
+  }
+}

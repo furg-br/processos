@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processos.furg.br/schemas/rsc-dossie-envio-sei.v1.json",
+  "title": "Dossiê final e envio do RSC ao SEI",
+  "type": "object",
+  "required": ["versaoFinal", "documentos", "statusEnvio", "chaveIdempotencia"],
+  "properties": {
+    "versaoFinal": { "type": "integer", "minimum": 1 },
+    "dataCongelamento": { "type": "string", "format": "date-time" },
+    "documentos": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["tipo", "nomeArquivo", "hash"],
+        "properties": {
+          "tipo": { "type": "string", "enum": ["REQUERIMENTO_FINAL", "MEMORIAL_FINAL", "PARECER_FINAL", "COMPROVANTE", "PRIORIDADE"] },
+          "nomeArquivo": { "type": "string" },
+          "hash": { "type": "string", "minLength": 1 },
+          "numeroSei": { "type": ["string", "null"] },
+          "status": { "type": "string", "enum": ["PENDENTE", "ENVIANDO", "ENVIADO", "ERRO"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "statusEnvio": { "type": "string", "enum": ["NAO_INICIADO", "ENVIANDO", "ENVIADO", "ERRO"] },
+    "chaveIdempotencia": { "type": "string", "minLength": 1 },
+    "numeroProcessoSei": { "type": ["string", "null"] },
+    "unidadeOrigem": { "const": "CRSC-PCCTAE" },
+    "unidadeDestino": { "const": "PROGEP" },
+    "erro": { "type": ["string", "null"] }
+  },
+  "additionalProperties": false
+}

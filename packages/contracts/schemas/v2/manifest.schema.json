@@ -1,0 +1,124 @@
+{
+  "$ref": "#/definitions/ProcessBundleV2Manifest",
+  "definitions": {
+    "ProcessBundleV2Manifest": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "type": "string",
+          "const": "furg.process-bundle"
+        },
+        "version": {
+          "type": "string",
+          "const": "2.0"
+        },
+        "contractVersion": {
+          "type": "string",
+          "const": "processos.furg.br/v2"
+        },
+        "profile": {
+          "type": "string",
+          "enum": [
+            "DOCUMENTARY",
+            "ANALYZABLE",
+            "IMPLEMENTABLE",
+            "EXECUTABLE"
+          ]
+        },
+        "processDefinitionKey": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 200,
+          "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$",
+          "errorMessage": {
+            "pattern": "Use uma chave semântica estável em minúsculas."
+          }
+        },
+        "processVersionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "bindingSetVersionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "releaseId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdBy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "mediaType": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "size": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "visibility": {
+                "type": "string",
+                "enum": [
+                  "PUBLIC",
+                  "INSTITUTIONAL",
+                  "TECHNICAL",
+                  "RESTRICTED"
+                ]
+              },
+              "required": {
+                "type": "boolean",
+                "default": true
+              }
+            },
+            "required": [
+              "path",
+              "mediaType",
+              "sha256",
+              "size",
+              "visibility"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 4,
+          "maxItems": 500
+        }
+      },
+      "required": [
+        "format",
+        "version",
+        "contractVersion",
+        "profile",
+        "processDefinitionKey",
+        "processVersionId",
+        "bindingSetVersionId",
+        "releaseId",
+        "createdAt",
+        "createdBy",
+        "files"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processos.furg.br/schemas/v2/manifest.schema.json"
+}

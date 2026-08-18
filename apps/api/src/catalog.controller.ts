@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Post } from "@nestjs/common";
+import { BadRequestException, Body, ConflictException, Controller, Delete, ForbiddenException, Get, Headers, Param, Patch, Post } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { createHash } from "node:crypto";
 import * as Ajv2020Module from "ajv/dist/2020.js";
@@ -30,8 +30,40 @@ export class CatalogController {
     });
   }
 
+  @Get("software/functionalities")
+  functionalities() {
+    return this.prisma.functionality.findMany({ include: { module: { include: { system: true } } }, orderBy: [{ module: { system: { name: "asc" } } }, { module: { name: "asc" } }, { name: "asc" }] });
+  }
+
+  @Post("software/operations")
+  async createOperation(@Body() body: { functionalityId: string; operationId: string; method?: string; path?: string; version: string; deprecated?: boolean }, @Headers() headers: Record<string, string | undefined>) {
+    this.assertCatalogAdministration(headers);
+    await this.assertFunctionality(body.functionalityId);
+    if (!body.operationId?.trim() || !body.version?.trim()) throw new BadRequestException("Informe o identificador e a versão da operação.");
+    return this.prisma.softwareOperation.create({ data: { functionalityId: body.functionalityId, operationId: body.operationId.trim(), method: body.method?.trim().toUpperCase() || null, path: body.path?.trim() || null, version: body.version.trim(), deprecated: Boolean(body.deprecated) }, include: { functionality: { include: { module: { include: { system: true } } } } } });
+  }
+
+  @Patch("software/operations/:operationId")
+  async updateOperation(@Param("operationId") id: string, @Body() body: { functionalityId: string; operationId: string; method?: string; path?: string; version: string; deprecated?: boolean }, @Headers() headers: Record<string, string | undefined>) {
+    this.assertCatalogAdministration(headers);
+    await this.assertFunctionality(body.functionalityId);
+    if (!body.operationId?.trim() || !body.version?.trim()) throw new BadRequestException("Informe o identificador e a versão da operação.");
+    return this.prisma.softwareOperation.update({ where: { id }, data: { functionalityId: body.functionalityId, operationId: body.operationId.trim(), method: body.method?.trim().toUpperCase() || null, path: body.path?.trim() || null, version: body.version.trim(), deprecated: Boolean(body.deprecated) }, include: { functionality: { include: { module: { include: { system: true } } } } } });
+  }
+
+  @Delete("software/operations/:operationId")
+  async deleteOperation(@Param("operationId") id: string, @Headers() headers: Record<string, string | undefined>) {
+    this.assertCatalogAdministration(headers);
+    const bindings = await this.prisma.elementBinding.count({ where: { operationId: id } });
+    if (bindings) throw new ConflictException("A operação está vinculada a elementos BPMN e não pode ser removida. Marque-a como descontinuada.");
+    await this.prisma.softwareOperation.delete({ where: { id } });
+    return { deleted: true };
+  }
+
   @Post("software/openapi/import")
-  async importOpenApi(@Body() body: { functionalityId: string; document: string }) {
+  async importOpenApi(@Body() body: { functionalityId: string; document: string }, @Headers() headers: Record<string, string | undefined>) {
+    this.assertCatalogAdministration(headers);
+    await this.assertFunctionality(body.functionalityId);
     const parsed = YAML.parse(body.document) as Record<string, any>;
     if (!parsed?.openapi || !parsed.paths) throw new BadRequestException("Informe um documento OpenAPI 3.x válido.");
     const sourceHash = createHash("sha256").update(body.document).digest("hex");
@@ -61,7 +93,8 @@ export class CatalogController {
   async createInformationSchema(@Body() body: {
     assetId?: string; name: string; slug: string; description: string; kind: string;
     visibility: "PUBLIC" | "INTERNAL" | "RESTRICTED"; jsonSchema: Record<string, unknown>;
-  }) {
+  }, @Headers() headers: Record<string, string | undefined>) {
+    this.assertCatalogAdministration(headers);
     const Ajv2020 = (Ajv2020Module as unknown as { default: new (options: object) => { compile: (schema: object) => unknown } }).default;
     const ajv = new Ajv2020({ allErrors: true, strict: false });
     try { ajv.compile(body.jsonSchema); } catch (error) {
@@ -82,5 +115,15 @@ export class CatalogController {
       },
       include: { asset: true },
     });
+  }
+
+  private assertCatalogAdministration(headers?: Record<string, string | undefined>) {
+    if ((process.env.AUTH_MODE ?? "development") === "development") return;
+    const roles = (headers?.["x-platform-roles"] ?? headers?.["x-platform-role"] ?? "").split(",").map((role) => role.trim());
+    if (!roles.some((role) => ["CGTI_ADMIN", "PLATFORM_ADMIN"].includes(role))) throw new ForbiddenException("Somente administradores do CGTI podem alterar catálogos técnicos.");
+  }
+
+  private async assertFunctionality(functionalityId: string) {
+    if (!await this.prisma.functionality.findUnique({ where: { id: functionalityId }, select: { id: true } })) throw new BadRequestException("Selecione uma funcionalidade existente.");
   }
 }

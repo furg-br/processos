@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export * from "./v2/index.js";
+
 export const visibilitySchema = z.enum(["PUBLIC", "INTERNAL", "RESTRICTED"]);
 export const perspectiveSchema = z.enum(["AS_IS", "TO_BE"]);
 export const versionStatusSchema = z.enum([
@@ -49,6 +51,9 @@ export const processRelationSchema = z.object({
   targetProcessId: z.string().uuid(),
   type: relationTypeSchema,
   label: z.string().nullable().optional(),
+  sourceElementId: z.string().nullable().optional(),
+  source: z.object({ id: z.string().uuid(), title: z.string(), slug: z.string() }).optional(),
+  target: z.object({ id: z.string().uuid(), title: z.string(), slug: z.string() }).optional(),
 });
 
 export const processVersionSummarySchema = z.object({
@@ -58,6 +63,7 @@ export const processVersionSummarySchema = z.object({
   status: versionStatusSchema,
   createdAt: z.string().datetime(),
   publishedAt: z.string().datetime().nullable().optional(),
+  contractVersion: z.enum(["v1", "v2"]).optional(),
 });
 
 export const processSummarySchema = z.object({
@@ -71,6 +77,13 @@ export const processSummarySchema = z.object({
   ownerUnit: z.object({ id: z.string().uuid().optional(), acronym: z.string(), name: z.string() }),
   participantUnits: z.array(z.object({ acronym: z.string(), name: z.string() })),
   currentVersion: processVersionSummarySchema.nullable(),
+  facets: z.object({
+    systems: z.array(z.object({ key: z.string(), label: z.string() })),
+    modules: z.array(z.object({ key: z.string(), label: z.string() })),
+    units: z.array(z.object({ key: z.string(), label: z.string() })),
+    affiliations: z.array(z.object({ key: z.string(), label: z.string() })),
+    domains: z.array(z.object({ key: z.string(), label: z.string() })),
+  }).optional(),
   updatedAt: z.string().datetime(),
 });
 
@@ -107,6 +120,7 @@ export const processDetailSchema = processSummarySchema.extend({
   relations: z.array(processRelationSchema),
   outline: z.array(bpmnOutlineElementSchema),
   elementMetadata: z.array(elementMetadataSchema),
+  availableTransitions: z.array(z.enum(["SUBMIT_UNIT", "APPROVE_UNIT", "APPROVE_CURATOR", "REQUEST_CHANGES", "ARCHIVE"])).optional(),
 });
 
 export const createProcessInputSchema = z.object({

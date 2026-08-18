@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processos.furg.br/schemas/rsc-parecer.v1.json",
+  "title": "Parecer da Comissão RSC",
+  "type": "object",
+  "required": ["resultado", "texto", "fundamentos", "dataDecisao"],
+  "properties": {
+    "resultado": { "type": "string", "enum": ["DEFERIDO", "INDEFERIDO"] },
+    "texto": { "type": "string", "minLength": 1, "description": "HTML básico sanitizado." },
+    "fundamentos": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" } },
+    "saldoReconhecido": { "type": "number", "minimum": 0 },
+    "pontosItensDeferidos": { "type": "number", "minimum": 0 },
+    "pontosTotalConsiderado": { "type": "number", "minimum": 0 },
+    "criteriosDistintosDeferidos": { "type": "integer", "minimum": 0 },
+    "dataDecisao": { "type": "string", "format": "date-time" },
+    "automaticoPorPrazo": { "type": "boolean", "default": false }
+  },
+  "additionalProperties": false
+}

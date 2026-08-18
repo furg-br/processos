@@ -2,11 +2,17 @@
 
 Protótipo funcional de um repositório governado de processos BPMN 2.0. A aplicação cataloga processos, unidades, dados e operações de software; ela não executa instâncias de workflow nem substitui um BPMS.
 
+## Contrato v2
+
+O planejamento está em [Planejamento fechado — ProcessBundle v2](docs/planejamento-processbundle-v2.md) e a estrutura implementada em [Especificação do ProcessBundle v2](docs/process-bundle-v2.md). O formato possui schemas, CLI, migrador v1, threat model e dois fixtures independentes.
+
+Status: baseline `processos.furg.br/v2` validada. A definição de pronto, incluindo restauração operacional e consumo independente por ChatGPT 5.6 e Claude Sonnet 5, está documentada em [Relatório de conformidade v2](artifacts/v2-conformance-report.md).
+
 ## Estado atual
 
 As seguintes funcionalidades estão disponíveis na interface:
 
-- catálogo pesquisável, com filtro de visibilidade e processos `AS-IS` e `TO-BE`;
+- catálogo pesquisável, com filtros por visibilidade, sistema, módulo, unidade e vínculo, além de processos `AS-IS` e `TO-BE`;
 - criação de processo em rascunho a partir de um diagrama BPMN inicial;
 - edição dos dados cadastrais de rascunhos e versões devolvidas para ajustes;
 - editor BPMN com `bpmn-js`, modo guiado ou avançado, validação, `bpmnlint` e tela cheia;
@@ -14,19 +20,22 @@ As seguintes funcionalidades estão disponíveis na interface:
 - proteção contra navegação e fechamento da página quando há alterações não salvas;
 - visualização geral, diagrama, representação textual acessível e histórico de versões;
 - remoção de versões em rascunho pela aba Versões, com confirmação e proteção contra edição ativa;
-- envio de um rascunho para revisão da unidade;
+- revisão governada completa na interface, com ações calculadas pelo backend conforme papel e unidade;
 - importação de ProcessBundle ZIP ou BPMN/XML pela interface;
-- exportação de uma versão no formato `ProcessBundle v1`;
+- quarentena, dry-run, hashes, referências cruzadas e aprovação CGTI para vínculos técnicos v2;
+- rastreabilidade com tabela, badges BPMN, painel de atividade, inventários, projeção pública e matriz perfil/grupo;
+- rota pública independente em `/publico/processos/{uuid-ou-slug}`, alimentada somente pela projeção pública sanitizada;
+- versões v2 reproduzíveis, releases imutáveis, administração delegável e evidência Git;
+- exportação autenticada de versões legadas em `ProcessBundle v1` e preservação byte a byte do ZIP canônico v2;
 - páginas navegáveis e compartilháveis para catálogo, mapa, dados, software e processos;
 - leitura de contratos JSON Schema e de operações de software catalogadas.
 
-A API também implementa o fluxo completo de revisão, comparação entre versões, importação OpenAPI 3.x e criação de versões de JSON Schema. Essas operações ainda não possuem todos os controles correspondentes na interface; podem ser exploradas pela documentação OpenAPI.
+A API também implementa comparação entre versões, importação OpenAPI 3.x e criação de versões de JSON Schema. Essas operações ainda não possuem todos os controles correspondentes na interface; podem ser exploradas pela documentação OpenAPI.
 
 ### O que ainda é demonstrativo
 
 - o mapa em React Flow usa as relações dos quatro processos de demonstração; ainda não há interface para criar vínculos entre processos;
 - os botões **Criar nova versão** em Dados e **Importar OpenAPI** em Software ainda não abrem formulários;
-- a interface permite enviar para revisão da unidade, mas as aprovações da unidade e da curadoria ainda são feitas pela API;
 - se a API não responder, o frontend apresenta dados de demonstração. Esse modo não persiste alterações.
 
 ## Arquitetura
@@ -38,7 +47,7 @@ packages/contracts       contratos JSON/TypeScript compartilhados
 packages/bpmn-extension  extensão FURG, outline, lint e diff BPMN
 ```
 
-O BPMN XML é a fonte canônica do diagrama. Metadados pesquisáveis, versões, vínculos e auditoria ficam no PostgreSQL. O MinIO está preparado para armazenamento de objetos. Um ProcessBundle reúne `manifest.json`, `process.bpmn`, `metadata.json` e os JSON Schemas relacionados.
+O BPMN XML é a fonte canônica do diagrama. Recursos semânticos versionados complementam o BPMN sem duplicá-lo. O ProcessBundle v2 preserva esses recursos e arquivos auxiliares com tamanho, visibilidade e SHA-256 no manifesto.
 
 ## Instalação local recomendada
 
@@ -160,10 +169,11 @@ A URL canônica usa o UUID estável do processo e um trecho legível derivado do
 
 ### Consultar um processo
 
-Cada processo possui quatro visões:
+Cada processo possui cinco visões:
 
 - **Visão geral:** escopo, responsabilidade, participantes e encadeamentos registrados;
 - **Diagrama:** visualização ou edição do BPMN;
+- **Rastreabilidade:** tabela operacional, BPMN vinculado, prévia pública, dados/formulários e perfis/grupos;
 - **Visão textual:** lista acessível dos eventos, atividades e decisões do XML;
 - **Versões:** revisões e situações registradas.
 
@@ -176,6 +186,7 @@ As rotas podem ser copiadas e abertas diretamente, inclusive após recarregar a 
 /software
 /processos/{uuid}/{nome-legivel}
 /processos/{uuid}/{nome-legivel}/diagrama
+/processos/{uuid}/{nome-legivel}/operacao
 /processos/{uuid}/{nome-legivel}/estrutura
 /processos/{uuid}/{nome-legivel}/versoes
 ```
@@ -188,9 +199,9 @@ Na aba **Versões**, selecione **Remover** ao lado de uma versão com situação
 
 Se houver um bloqueio de edição ativo, encerre a edição antes de excluir. Quando o rascunho for a única versão, a confirmação informa que o cadastro do processo também será removido, evitando que permaneça um processo sem versão no catálogo. A remoção é definitiva; exporte o pacote antes se precisar preservar uma cópia.
 
-### Enviar para revisão
+### Revisar e publicar
 
-Depois de salvar e encerrar a edição, use **Enviar para revisão da unidade** na visão Diagrama. A API valida o BPMN e muda a situação de `DRAFT` para `UNIT_REVIEW`.
+Depois de salvar e encerrar a edição, use o painel **Ações disponíveis para você**. O servidor devolve somente as transições permitidas para o papel, a unidade e a situação corrente; a interface não presume autorização. A versão governada mais recente permanece no espaço interno, enquanto a última versão publicada continua sendo a fonte da projeção pública.
 
 O fluxo de governança implementado na API é:
 
@@ -200,7 +211,7 @@ DRAFT → UNIT_REVIEW → CURATOR_REVIEW → PUBLISHED
               CHANGES_REQUESTED
 ```
 
-As ações de aprovar, solicitar ajustes e arquivar ainda são operadas pela API. Consulte os endpoints de transição no Swagger.
+Enviar, aprovar pela unidade, aprovar pela curadoria, solicitar ajustes e arquivar estão disponíveis no mesmo painel quando autorizados. Solicitar ajustes e arquivar exigem uma justificativa, preservada na auditoria. Cada avanço valida o BPMN; versões v2 também exigem vínculos técnicos aprovados pelo CGTI e um pacote integralmente válido.
 
 ## Importar e exportar
 
@@ -208,18 +219,18 @@ As ações de aprovar, solicitar ajustes e arquivar ainda são operadas pela API
 
 No Catálogo, selecione **Importar processo**. São aceitos arquivos de até 15 MB:
 
-- `.zip` no formato ProcessBundle v1;
+- `.zip` no formato ProcessBundle v2;
 - `.bpmn` ou `.xml` contendo BPMN 2.0.
 
 Um BPMN puro exige um nome e uma unidade responsável, porque o XML não contém todos os campos do catálogo. O processo é criado como rascunho interno; complete os demais campos depois em **Editar dados**.
 
-Um ProcessBundle restaura o BPMN e, quando disponíveis, schemas, metadados de elementos e relações resolvíveis. Se o identificador ou slug já existir, a importação acrescenta uma nova revisão em rascunho. Dependências ausentes são apresentadas como avisos e não impedem a importação do restante do pacote.
+Um ProcessBundle v2 é validado primeiro em quarentena. A tela apresenta cobertura, conflitos e vínculos técnicos pendentes; somente depois a pessoa confirma a aplicação transacional. Pacotes incompletos não alteram parcialmente o catálogo. O endpoint legado continua aceitando v1 para migração controlada.
 
 Ao terminar, a interface abre o processo importado.
 
 ### Exportar
 
-Abra um processo e selecione **Exportar pacote**. O download contém a versão exibida em um ZIP ProcessBundle v1, adequado para backup lógico, intercâmbio entre instalações ou nova importação.
+Abra um processo e selecione **Exportar pacote**. Versões v2 preservam os arquivos, hashes e identidades necessários para reproduzir o release; versões legadas continuam sendo exportadas como v1.
 
 ## Persistência e segurança dos dados
 
@@ -302,7 +313,7 @@ Em produção, forneça credenciais por variáveis ou pelo gerenciador instituci
 | `VITE_PUBLIC_SITE_URL` | endereço canônico público | `http://localhost:5173` |
 | `VITE_PUBLIC_INDEXING` | permite indexação pública no build | `false` |
 
-No modo `development`, a API aceita os cabeçalhos `x-user-id` e `x-user-name`. A integração institucional deverá substituir esse adaptador pelo SSO, mantendo autorização e papéis dentro da ferramenta.
+No modo `development`, a API aceita cabeçalhos demonstrativos. Em `AUTH_MODE=oidc`, o frontend usa Authorization Code + PKCE e a API valida JWT por JWKS, issuer e audience; os cabeçalhos recebidos do cliente são substituídos pelos claims verificados. Unidade e papel são avaliados em conjunto, e delegações explícitas continuam sob governança do CGTI.
 
 ## Navegação, compartilhamento e SEO
 
@@ -384,4 +395,4 @@ O canvas mantém a atribuição obrigatória do bpmn.io. A visão textual oferec
 
 ## Limites desta versão
 
-Não há execução de tarefas, telemetria, mineração de processos, geração de código, edição simultânea ou salvamento automático. A gestão visual de relações, a administração completa da revisão, a edição de contratos de dados e a importação OpenAPI pela interface permanecem como próximas evoluções. Flowable, DMN e ArchiMate devem ser avaliados somente depois da validação do catálogo e de sua governança.
+Não há execução de tarefas, telemetria, mineração de processos, geração de código, edição simultânea ou salvamento automático. A gestão visual de relações, a tela de consulta da trilha de auditoria, a edição de contratos de dados e a importação OpenAPI pela interface permanecem como próximas evoluções. Flowable, DMN e ArchiMate devem ser avaliados somente depois da validação do catálogo e de sua governança.

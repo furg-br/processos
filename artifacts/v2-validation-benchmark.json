@@ -1,0 +1,24 @@
+{
+  "generatedAt": "2026-08-16T19:57:19.490Z",
+  "runtime": {
+    "node": "v24.19.0",
+    "platform": "win32",
+    "architecture": "x64"
+  },
+  "input": {
+    "path": "C:\\Projetos\\processos\\artifacts\\rsc-as-is\\rsc-as-is.process-bundle-v2.zip",
+    "bytes": 28612,
+    "profile": "IMPLEMENTABLE"
+  },
+  "iterations": 25,
+  "milliseconds": {
+    "min": 9.35,
+    "median": 11.78,
+    "p95": 22.74,
+    "max": 66.2,
+    "average": 14.46
+  },
+  "valid": true,
+  "issueCount": 0,
+  "note": "Medição local de referência; não é um SLA e deve ser repetida no hardware de produção."
+}

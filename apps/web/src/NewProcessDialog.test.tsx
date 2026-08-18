@@ -22,7 +22,9 @@ describe("criação de processo", () => {
     fireEvent.change(screen.getByLabelText(/Categoria/), { target: { value: "Compras" } });
     fireEvent.change(screen.getByLabelText(/Resumo/), { target: { value: "Organiza a aquisição de material permanente." } });
     fireEvent.change(screen.getByLabelText(/Público atendido/), { target: { value: "Unidades administrativas" } });
-    await waitFor(() => expect(screen.getByLabelText(/Unidade responsável/)).toHaveValue("00000000-0000-4000-8000-000000000001"));
+    await waitFor(() => expect(screen.getByRole("option", { name: /CGTI/ })).toBeInTheDocument());
+    expect(screen.getByLabelText(/Unidade responsável/)).toHaveValue("");
+    fireEvent.change(screen.getByLabelText(/Unidade responsável/), { target: { value: "00000000-0000-4000-8000-000000000001" } });
     fireEvent.click(screen.getByRole("button", { name: "Criar e abrir diagrama" }));
 
     await waitFor(() => expect(createProcess).toHaveBeenCalledWith(expect.objectContaining({

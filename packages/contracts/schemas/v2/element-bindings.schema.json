@@ -1,0 +1,153 @@
+{
+  "$ref": "#/definitions/ElementBindingCatalog",
+  "definitions": {
+    "ElementBindingCatalog": {
+      "type": "object",
+      "properties": {
+        "apiVersion": {
+          "type": "string",
+          "const": "processos.furg.br/v2"
+        },
+        "kind": {
+          "type": "string",
+          "const": "ElementBindingCatalog"
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "key": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 200,
+              "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$",
+              "errorMessage": {
+                "pattern": "Use uma chave semântica estável em minúsculas."
+              }
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1
+            },
+            "visibility": {
+              "type": "string",
+              "enum": [
+                "PUBLIC",
+                "INSTITUTIONAL",
+                "TECHNICAL",
+                "RESTRICTED"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "DRAFT",
+                "IN_REVIEW",
+                "PUBLISHED",
+                "SUPERSEDED",
+                "ARCHIVED"
+              ],
+              "default": "DRAFT"
+            },
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 240
+            },
+            "description": {
+              "type": "string",
+              "maxLength": 2000
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updatedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "labels": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "default": {}
+            }
+          },
+          "required": [
+            "id",
+            "key",
+            "version",
+            "visibility",
+            "title",
+            "createdAt",
+            "updatedAt"
+          ],
+          "additionalProperties": false
+        },
+        "spec": {
+          "type": "object",
+          "properties": {
+            "elements": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "bpmnElementId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "semanticId": {
+                    "$ref": "#/definitions/ElementBindingCatalog/properties/metadata/properties/key"
+                  },
+                  "elementType": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "phaseRef": {
+                    "$ref": "#/definitions/ElementBindingCatalog/properties/metadata/properties/key"
+                  },
+                  "visibility": {
+                    "$ref": "#/definitions/ElementBindingCatalog/properties/metadata/properties/visibility"
+                  },
+                  "publicLabel": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "bpmnElementId",
+                  "semanticId",
+                  "elementType",
+                  "label",
+                  "visibility"
+                ],
+                "additionalProperties": false
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "elements"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "apiVersion",
+        "kind",
+        "metadata",
+        "spec"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processos.furg.br/schemas/v2/element-bindings.schema.json"
+}

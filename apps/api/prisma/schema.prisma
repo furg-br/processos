@@ -49,6 +49,25 @@ enum DataDirection {
   OUTPUT
 }
 
+enum BundleImportStatus {
+  QUARANTINED
+  VALIDATED
+  REJECTED
+  APPLIED
+}
+
+enum BindingApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum WebhookDeliveryStatus {
+  PENDING
+  DELIVERED
+  FAILED
+}
+
 model Taxonomy {
   id        String     @id @default(uuid())
   name      String
@@ -64,40 +83,58 @@ model Taxonomy {
 }
 
 model OrganizationUnit {
-  id          String             @id @default(uuid())
-  externalId  String             @unique
-  acronym     String
-  name        String
-  parentId    String?
-  parent      OrganizationUnit?  @relation("OrganizationTree", fields: [parentId], references: [id])
-  children    OrganizationUnit[] @relation("OrganizationTree")
-  active      Boolean            @default(true)
-  owned       Process[]          @relation("ProcessOwner")
-  participants ProcessUnit[]
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  id                      String                    @id @default(uuid())
+  externalId              String                    @unique
+  acronym                 String
+  name                    String
+  parentId                String?
+  parent                  OrganizationUnit?         @relation("OrganizationTree", fields: [parentId], references: [id])
+  children                OrganizationUnit[]        @relation("OrganizationTree")
+  active                  Boolean                   @default(true)
+  owned                   Process[]                 @relation("ProcessOwner")
+  participants            ProcessUnit[]
+  delegatedAdministrators DelegatedAdministration[]
+  references              OrganizationUnitReference[]
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+}
+
+/// Referências estáveis vindas de contratos e fontes institucionais externas.
+/// A unidade permanece sendo a autoridade local; uma referência nunca cria
+/// uma unidade durante a importação de um processo.
+model OrganizationUnitReference {
+  id           String           @id @default(uuid())
+  unitId       String
+  unit         OrganizationUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  sourceSystem String
+  reference    String
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@unique([sourceSystem, reference])
+  @@index([unitId])
 }
 
 model Process {
-  id             String          @id @default(uuid())
-  slug           String          @unique
-  title          String
-  description    String
-  category       String
-  audience       String
-  visibility     Visibility      @default(INTERNAL)
-  continuous     Boolean         @default(false)
-  ownerUnitId    String
-  ownerUnit      OrganizationUnit @relation("ProcessOwner", fields: [ownerUnitId], references: [id])
-  taxonomyId     String?
-  taxonomy       Taxonomy?       @relation(fields: [taxonomyId], references: [id])
-  participantUnits ProcessUnit[]
-  versions       ProcessVersion[]
+  id                String            @id @default(uuid())
+  slug              String            @unique
+  title             String
+  description       String
+  category          String
+  audience          String
+  visibility        Visibility        @default(INTERNAL)
+  continuous        Boolean           @default(false)
+  ownerUnitId       String
+  ownerUnit         OrganizationUnit  @relation("ProcessOwner", fields: [ownerUnitId], references: [id])
+  taxonomyId        String?
+  taxonomy          Taxonomy?         @relation(fields: [taxonomyId], references: [id])
+  participantUnits  ProcessUnit[]
+  versions          ProcessVersion[]
   outgoingRelations ProcessRelation[] @relation("RelationSource")
   incomingRelations ProcessRelation[] @relation("RelationTarget")
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  archivedAt     DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  archivedAt        DateTime?
 
   @@index([title])
   @@index([visibility])
@@ -114,31 +151,189 @@ model ProcessUnit {
 }
 
 model ProcessVersion {
-  id             String        @id @default(uuid())
-  processId      String
-  process        Process       @relation(fields: [processId], references: [id], onDelete: Cascade)
-  revision       Int
-  perspective    Perspective
-  status         VersionStatus @default(DRAFT)
-  bpmnXml        String        @db.Text
-  metadata       Json          @default("{}")
-  processSla     String?
-  contentHash    String
-  createdBy      String
-  createdAt      DateTime      @default(now())
-  submittedAt    DateTime?
-  unitApprovedAt DateTime?
-  curatorApprovedAt DateTime?
-  publishedAt    DateTime?
-  reviewNote     String?
-  elementBindings ElementBinding[]
-  dataBindings   DataBinding[]
-  leases         EditLease[]
-  audits         AuditEvent[]
-  attachments    Attachment[]
+  id                  String              @id @default(uuid())
+  processId           String
+  process             Process             @relation(fields: [processId], references: [id], onDelete: Cascade)
+  revision            Int
+  perspective         Perspective
+  status              VersionStatus       @default(DRAFT)
+  bpmnXml             String              @db.Text
+  metadata            Json                @default("{}")
+  processSla          String?
+  contentHash         String
+  createdBy           String
+  createdAt           DateTime            @default(now())
+  submittedAt         DateTime?
+  unitApprovedAt      DateTime?
+  curatorApprovedAt   DateTime?
+  publishedAt         DateTime?
+  reviewNote          String?
+  elementBindings     ElementBinding[]
+  dataBindings        DataBinding[]
+  leases              EditLease[]
+  audits              AuditEvent[]
+  attachments         Attachment[]
+  bindingSets         BindingSetVersion[] @relation("ProcessBindingSets")
+  activeBindingSet    BindingSetVersion?  @relation("ActiveBindingSet", fields: [bindingSetVersionId], references: [id], onDelete: SetNull)
+  releases            ProcessRelease[]
+  gitEvidence         GitEvidenceLink[]
+  importJobs          BundleImportJob[]
+  contractVersion     String              @default("v1")
+  conformanceProfile  String?
+  bindingSetVersionId String?             @unique
+  bundleHash          String?
+  immutableAt         DateTime?
 
   @@unique([processId, revision])
   @@index([processId, status, perspective])
+}
+
+model BindingSetVersion {
+  id               String                     @id
+  processVersionId String
+  processVersion   ProcessVersion             @relation("ProcessBindingSets", fields: [processVersionId], references: [id], onDelete: Cascade)
+  selectedBy       ProcessVersion?            @relation("ActiveBindingSet")
+  revision         Int
+  status           BindingApprovalStatus      @default(PENDING)
+  contentHash      String
+  bundleContent    Bytes?
+  createdBy        String
+  createdAt        DateTime                   @default(now())
+  reviewedBy       String?
+  reviewedAt       DateTime?
+  reviewNote       String?
+  resources        BundleResource[]
+  files            BundleArtifactFile[]
+  approvals        TechnicalBindingApproval[]
+  releases         ProcessRelease[]
+
+  @@unique([processVersionId, revision])
+  @@index([processVersionId, status])
+}
+
+model BundleResource {
+  id                  String            @id @default(uuid())
+  bindingSetVersionId String
+  bindingSetVersion   BindingSetVersion @relation(fields: [bindingSetVersionId], references: [id], onDelete: Cascade)
+  path                String
+  kind                String
+  semanticKey         String
+  resourceVersion     String
+  visibility          String
+  content             Json
+  contentHash         String
+  createdAt           DateTime          @default(now())
+
+  @@unique([bindingSetVersionId, path])
+  @@index([semanticKey, resourceVersion])
+  @@index([bindingSetVersionId, kind])
+}
+
+model BundleArtifactFile {
+  id                  String            @id @default(uuid())
+  bindingSetVersionId String
+  bindingSetVersion   BindingSetVersion @relation(fields: [bindingSetVersionId], references: [id], onDelete: Cascade)
+  path                String
+  mediaType           String
+  visibility          String
+  content             Bytes
+  contentHash         String
+  createdAt           DateTime          @default(now())
+
+  @@unique([bindingSetVersionId, path])
+}
+
+model ProcessRelease {
+  id                  String            @id
+  processVersionId    String
+  processVersion      ProcessVersion    @relation(fields: [processVersionId], references: [id], onDelete: Restrict)
+  bindingSetVersionId String
+  bindingSetVersion   BindingSetVersion @relation(fields: [bindingSetVersionId], references: [id], onDelete: Restrict)
+  bundleHash          String
+  immutableSnapshot   Json
+  publishedAt         DateTime          @default(now())
+  effectiveFrom       DateTime?
+  effectiveUntil      DateTime?
+
+  @@unique([processVersionId, bindingSetVersionId])
+  @@index([publishedAt])
+}
+
+model BundleImportJob {
+  id                   String             @id @default(uuid())
+  status               BundleImportStatus @default(QUARANTINED)
+  fileName             String
+  uploadedBy           String
+  uploadedByName       String
+  content              Bytes
+  manifest             Json?
+  validationReport     Json
+  proposedProcessKey   String?
+  requiresCgtiApproval Boolean            @default(false)
+  processVersionId     String?
+  processVersion       ProcessVersion?    @relation(fields: [processVersionId], references: [id], onDelete: SetNull)
+  createdAt            DateTime           @default(now())
+  appliedAt            DateTime?
+
+  @@index([status, createdAt])
+}
+
+model TechnicalBindingApproval {
+  id                  String                @id @default(uuid())
+  bindingSetVersionId String
+  bindingSetVersion   BindingSetVersion     @relation(fields: [bindingSetVersionId], references: [id], onDelete: Cascade)
+  semanticKey         String
+  status              BindingApprovalStatus @default(PENDING)
+  reviewedBy          String?
+  reviewedAt          DateTime?
+  note                String?
+  createdAt           DateTime              @default(now())
+
+  @@unique([bindingSetVersionId, semanticKey])
+  @@index([status])
+}
+
+model GitEvidenceLink {
+  id                String         @id @default(uuid())
+  processVersionId  String
+  processVersion    ProcessVersion @relation(fields: [processVersionId], references: [id], onDelete: Cascade)
+  repository        String
+  commit            String
+  tag               String?
+  pullRequest       String?
+  path              String?
+  sourceArtifactKey String
+  observedHash      String?
+  createdAt         DateTime       @default(now())
+
+  @@index([repository, commit])
+}
+
+model WebhookOutboxEvent {
+  id          String                @id @default(uuid())
+  type        String
+  payload     Json
+  status      WebhookDeliveryStatus @default(PENDING)
+  attempts    Int                   @default(0)
+  nextAttempt DateTime              @default(now())
+  lastError   String?
+  createdAt   DateTime              @default(now())
+  deliveredAt DateTime?
+
+  @@index([status, nextAttempt])
+}
+
+model DelegatedAdministration {
+  id           String           @id @default(uuid())
+  unitId       String
+  unit         OrganizationUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  principalId  String
+  capabilities String[]
+  active       Boolean          @default(true)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@unique([unitId, principalId])
 }
 
 model ProcessRelation {
@@ -167,70 +362,70 @@ model SoftwareSystem {
 }
 
 model SystemModule {
-  id            String          @id @default(uuid())
-  systemId      String
-  system        SoftwareSystem  @relation(fields: [systemId], references: [id], onDelete: Cascade)
-  name          String
-  slug          String
+  id              String          @id @default(uuid())
+  systemId        String
+  system          SoftwareSystem  @relation(fields: [systemId], references: [id], onDelete: Cascade)
+  name            String
+  slug            String
   functionalities Functionality[]
 
   @@unique([systemId, slug])
 }
 
 model Functionality {
-  id          String              @id @default(uuid())
-  moduleId    String
-  module      SystemModule        @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  name        String
-  slug        String
-  operations  SoftwareOperation[]
+  id         String              @id @default(uuid())
+  moduleId   String
+  module     SystemModule        @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  name       String
+  slug       String
+  operations SoftwareOperation[]
 
   @@unique([moduleId, slug])
 }
 
 model SoftwareOperation {
-  id              String          @id @default(uuid())
+  id              String           @id @default(uuid())
   functionalityId String
-  functionality   Functionality   @relation(fields: [functionalityId], references: [id], onDelete: Cascade)
+  functionality   Functionality    @relation(fields: [functionalityId], references: [id], onDelete: Cascade)
   operationId     String
   method          String?
   path            String?
   version         String
   sourceHash      String?
-  deprecated      Boolean         @default(false)
+  deprecated      Boolean          @default(false)
   bindings        ElementBinding[]
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
   @@unique([functionalityId, operationId, version])
 }
 
 model ElementBinding {
-  id               String              @id @default(uuid())
-  processVersionId String
-  processVersion   ProcessVersion      @relation(fields: [processVersionId], references: [id], onDelete: Cascade)
-  bpmnElementId    String
+  id                 String               @id @default(uuid())
+  processVersionId   String
+  processVersion     ProcessVersion       @relation(fields: [processVersionId], references: [id], onDelete: Cascade)
+  bpmnElementId      String
   organizationUnitId String?
-  role             String?
-  workDuration     String?
-  waitDuration     String?
-  operationId      String?
-  operation        SoftwareOperation?  @relation(fields: [operationId], references: [id])
-  kind             SoftwareBindingKind?
+  role               String?
+  workDuration       String?
+  waitDuration       String?
+  operationId        String?
+  operation          SoftwareOperation?   @relation(fields: [operationId], references: [id])
+  kind               SoftwareBindingKind?
 
   @@index([processVersionId, bpmnElementId])
 }
 
 model InformationAsset {
-  id             String                     @id @default(uuid())
-  name           String
-  slug           String                     @unique
-  description    String
-  kind           String
-  ownerUnitId    String?
-  versions       InformationSchemaVersion[]
-  createdAt      DateTime                   @default(now())
-  updatedAt      DateTime                   @updatedAt
+  id          String                     @id @default(uuid())
+  name        String
+  slug        String                     @unique
+  description String
+  kind        String
+  ownerUnitId String?
+  versions    InformationSchemaVersion[]
+  createdAt   DateTime                   @default(now())
+  updatedAt   DateTime                   @updatedAt
 }
 
 model InformationSchemaVersion {

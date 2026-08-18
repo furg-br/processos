@@ -1,0 +1,53 @@
+{
+  "apiVersion": "processos.furg.br/v2",
+  "kind": "ProjectionCatalog",
+  "metadata": {
+    "id": "50000000-0000-4000-8000-000000000006",
+    "key": "processo.biblioteca.emprestimo.projecoes",
+    "version": "1.0.0",
+    "visibility": "PUBLIC",
+    "status": "DRAFT",
+    "title": "Projeção pública do empréstimo",
+    "createdAt": "2026-08-16T21:00:00.000Z",
+    "updatedAt": "2026-08-16T21:00:00.000Z",
+    "labels": {}
+  },
+  "spec": {
+    "projections": [
+      {
+        "key": "projecao.biblioteca.emprestimo.publica",
+        "audience": "PUBLIC",
+        "title": "Como retirar um material na biblioteca",
+        "summary": "Leve o material ao balcão, apresente sua identificação e confira a data de devolução.",
+        "phases": [
+          {
+            "key": "publica.solicitacao",
+            "label": "Apresente o material",
+            "description": "Dirija-se ao balcão com identificação institucional.",
+            "internalElementRefs": [
+              "biblioteca.usuario.apresentar.material"
+            ],
+            "responsibleLabel": "Pessoa solicitante",
+            "expectedDurationLabel": "Cerca de 5 minutos",
+            "nextPhaseRefs": [
+              "publica.conferencia"
+            ]
+          },
+          {
+            "key": "publica.conferencia",
+            "label": "Aguarde a conferência",
+            "description": "A biblioteca confere as condições e informa a devolução.",
+            "internalElementRefs": [
+              "biblioteca.atendente.conferir.condicoes",
+              "biblioteca.atendente.entregar.material"
+            ],
+            "responsibleLabel": "Atendimento da biblioteca",
+            "expectedDurationLabel": "Cerca de 10 minutos",
+            "nextPhaseRefs": []
+          }
+        ],
+        "excludedResourceRefs": []
+      }
+    ]
+  }
+}

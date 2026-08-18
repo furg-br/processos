@@ -1,0 +1,29 @@
+{
+  "experiment": "process-bundle-v2-agent-consumption",
+  "contractVersion": "processos.furg.br/v2",
+  "bundleSha256": "77d238b4f9a709afc34e09cb5a5f194b8ef5688ab90e5563199a423ea13b072e",
+  "responsesReceivedAt": "2026-08-16",
+  "noManualCorrections": true,
+  "participants": [
+    {
+      "sequence": 1,
+      "tool": "ChatGPT",
+      "reportedModel": "ChatGPT 5.6",
+      "reportedEffort": "alto",
+      "declaredAgentId": "agent-b",
+      "responseFile": "response-chatgpt-5.6-high.json",
+      "responseSha256": "18a0cebfeda7080f0b583579d93236000fa26518abb6cb4e0a54e33ff7386d08"
+    },
+    {
+      "sequence": 2,
+      "tool": "Claude",
+      "reportedModel": "Claude Sonnet 5",
+      "reportedEffort": "alto",
+      "declaredAgentId": "agent-b-rsc-bundle-reader",
+      "responseFile": "response-claude-sonnet-5-high.json",
+      "responseSha256": "23dc6fd11737cabd87379b83a16efb95d3793170c2365475d01735260d391cfa"
+    }
+  ],
+  "evaluationFile": "2026-08-16-rsc-agent-evaluation.json",
+  "result": "PASSED"
+}

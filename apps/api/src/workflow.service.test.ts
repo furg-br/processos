@@ -14,4 +14,9 @@ describe("WorkflowService", () => {
   it("impede publicação direta", () => {
     expect(() => service.transition("DRAFT", "APPROVE_CURATOR")).toThrow(BadRequestException);
   });
+
+  it("expõe somente ações válidas para o estado atual", () => {
+    expect(service.actions("UNIT_REVIEW")).toEqual(["APPROVE_UNIT", "REQUEST_CHANGES"]);
+    expect(service.actions("ARCHIVED")).toEqual([]);
+  });
 });

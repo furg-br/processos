@@ -1,0 +1,205 @@
+{
+"agent": {
+"id": "agent-b",
+"label": "Agente B — consumidor do bundle RSC AS-IS"
+},
+"contractVersion": "processos.furg.br/v2",
+"answers": [
+{
+"activityRef": "rsc.pedido.instruir",
+"entryPointRefs": [
+"entrada.casca.srh.rsc.servidor"
+],
+"actionRefs": [
+"acao.rsc.pedido.instruir"
+],
+"operationRefs": [
+"operacao.rsc.criarrascunho",
+"operacao.rsc.salvarrascunho",
+"operacao.rsc.incluiritem",
+"operacao.rsc.alteraritem",
+"operacao.rsc.excluiritem",
+"operacao.rsc.excluircomprovante"
+],
+"evidenceRefs": [
+"evidencia.rsc.implementacao"
+],
+"claimStatus": "IMPLEMENTED",
+"actorRefs": [
+"ator.servidor"
+],
+"location": {
+"systemRef": "sistema.casca",
+"moduleRef": "modulo.casca.srh",
+"screenRef": "tela.rsc.servidor",
+"menuPath": [
+"SRH",
+"RSC"
+]
+},
+"creationOperation": {
+"operationRef": "operacao.rsc.criarrascunho",
+"method": "POST",
+"path": "/sistemas/srh/aplicacoes/rsc/inserir.php",
+"handler": "inserir.php"
+},
+"formRefs": [
+"formulario.formpedidoinserir",
+"formulario.formpedidoalterar",
+"formulario.formitempedidoinserir",
+"formulario.formitemservidor"
+],
+"policyRefs": [
+"politica.rsc.escopo.servidor"
+],
+"rules": [
+"Data/hora de abertura alcançada",
+"Servidor elegível",
+"E-mail principal válido",
+"Telefone pessoal cadastrado",
+"Pedido pertence ao servidor",
+"status_principal em RASCUNHO ou EM_DILIGENCIA",
+"Em diligência, somente alvos liberados podem mudar",
+"PDF obrigatório",
+"Em diligência, item é vinculado à diligência aberta",
+"Item atual pertence ao pedido do servidor",
+"Exclusão de item exige status_principal=RASCUNHO",
+"Exclusão de comprovante exige status_principal=RASCUNHO e comprovante na versão atual"
+],
+"effects": [
+{
+"type": "UPDATE_DATA",
+"dataRef": "dado.rsc.pedido"
+},
+{
+"type": "UPDATE_DATA",
+"dataRef": "dado.rsc.item.evidencia"
+}
+],
+"inputRefs": [
+"dado.rsc.pedido",
+"dado.rsc.item.evidencia"
+],
+"outputRefs": [
+"dado.rsc.pedido",
+"dado.rsc.item.evidencia"
+],
+"dataContracts": [
+"data/schemas/rsc-pedido.v1.schema.json",
+"data/schemas/rsc-item-evidencia.v1.schema.json"
+],
+"targetFlowRef": "Flow_02"
+},
+{
+"activityRef": "rsc.pedido.enviar.para.avaliacao",
+"entryPointRefs": [
+"entrada.casca.srh.rsc.servidor"
+],
+"actionRefs": [
+"acao.rsc.pedido.enviar.para.avaliacao"
+],
+"operationRefs": [
+"operacao.rsc.enviarparaavaliacao"
+],
+"evidenceRefs": [
+"evidencia.rsc.implementacao"
+],
+"claimStatus": "IMPLEMENTED",
+"actorRefs": [
+"ator.servidor"
+],
+"technicalOperation": {
+"operationRef": "operacao.rsc.enviarparaavaliacao",
+"method": "POST",
+"path": "/sistemas/srh/aplicacoes/rsc/enviar_para_avaliacao.php",
+"handler": "enviar_para_avaliacao.php"
+},
+"policyRefs": [
+"politica.rsc.escopo.servidor"
+],
+"rules": [
+"status_principal=RASCUNHO",
+"Declarações e consistência válidas",
+"Itens e comprovantes suficientes para o envio",
+"pedido.id_funcionario == sessao.id_funcionario"
+],
+"effects": [
+{
+"type": "UPDATE_DATA",
+"dataRef": "dado.rsc.pedido"
+},
+{
+"type": "STATE_TRANSITION",
+"stateMachineRef": "estado.rsc.pedido",
+"transitionRef": "transicao.rsc.enviar.avaliacao",
+"from": "RASCUNHO",
+"to": "EM_ANALISE"
+}
+],
+"inputRefs": [
+"dado.rsc.pedido",
+"dado.rsc.item.evidencia"
+],
+"outputRefs": [
+"dado.rsc.pedido"
+],
+"dataContracts": [
+"data/schemas/rsc-pedido.v1.schema.json",
+"data/schemas/rsc-item-evidencia.v1.schema.json"
+],
+"targetFlowRef": "Flow_02B",
+"nextActivityRef": "rsc.pedido.validar.protocolar.publicar"
+},
+{
+"activityRef": "rsc.pedido.validar.protocolar.publicar",
+"entryPointRefs": [],
+"actionRefs": [
+"acao.rsc.pedido.validar.protocolar.publicar"
+],
+"operationRefs": [],
+"evidenceRefs": [
+"evidencia.rsc.implementacao"
+],
+"claimStatus": "IMPLEMENTED",
+"executionMode": "AUTOMATED",
+"rules": [],
+"effects": [
+{
+"type": "UPDATE_DATA",
+"dataRef": "dado.rsc.pedido"
+}
+],
+"inputRefs": [
+"dado.rsc.pedido",
+"dado.rsc.item.evidencia"
+],
+"outputRefs": [
+"dado.rsc.pedido"
+],
+"targetFlowRef": "Flow_03",
+"technicalRoute": null,
+"routeConclusion": "O bundle não associa operação técnica nem rota HTTP a esta atividade automática; nenhuma rota adicional deve ser inventada."
+},
+{
+"activityRef": "rsc.pedido.enviar.para.avaliacao",
+"entryPointRefs": [
+"entrada.casca.srh.rsc.servidor"
+],
+"actionRefs": [
+"acao.rsc.pedido.enviar.para.avaliacao"
+],
+"operationRefs": [
+"operacao.rsc.enviarparaavaliacao"
+],
+"evidenceRefs": [
+"evidencia.divergencia.divergence.duplicate.send.route"
+],
+"claimStatus": "CONTESTED",
+"contestedFinding": "Enviar para avaliação possui a operação nativa catalogada, mas alterar.php também executa a mesma transição quando acao=enviar_pedido; o bundle não fornece um segundo operationRef normalizado para essa via."
+}
+],
+"unresolved": [
+"Confirmar se a transição alternativa executada por alterar.php com acao=enviar_pedido permanece ativa no ambiente e como deve ser representada para preservar auditoria sem criar uma rota ou operationRef ausente.",
+"A atividade automática rsc.pedido.validar.protocolar.publicar não possui operationRefs no bundle; sua implementação técnica não pode ser determinada sem evidência adicional."
+]
+}

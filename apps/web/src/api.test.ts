@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createProcess, deleteDraftVersion, importProcess, releaseLease, renewLease, updateProcessMetadata } from "./api";
+import { createProcess, deleteDraftVersion, downloadProcessBundle, importProcess, releaseLease, renewLease, updateProcessMetadata } from "./api";
 
 describe("API de bloqueio de edição", () => {
   afterEach(() => { vi.unstubAllGlobals(); });
@@ -100,6 +100,18 @@ describe("API de processos", () => {
     expect(fetch).toHaveBeenCalledWith(
       "http://localhost:3000/api/v1/processes/process-id/versions/version-id",
       expect.objectContaining({ method: "DELETE" }),
+    );
+  });
+
+  it("exporta o pacote por requisição autenticável, em vez de um link sem credenciais", async () => {
+    const payload = new Blob(["bundle"]);
+    const fetch = vi.fn().mockResolvedValue({ ok: true, blob: () => Promise.resolve(payload) });
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(downloadProcessBundle("process-id", "version-id")).resolves.toBe(payload);
+    expect(fetch).toHaveBeenCalledWith(
+      "http://localhost:3000/api/v1/processes/process-id/versions/version-id/export",
+      expect.objectContaining({ headers: expect.objectContaining({ "x-user-id": expect.any(String) }) }),
     );
   });
 });

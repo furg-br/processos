@@ -7,7 +7,12 @@ import "bpmn-js/dist/assets/bpmn-font/css/bpmn.css";
 import "@xyflow/react/dist/style.css";
 import "./styles.css";
 import { App } from "./App";
+import { initializeIdentity } from "./identity";
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode><App /></StrictMode>,
-);
+void initializeIdentity().then((ready) => {
+  if (!ready) return;
+  createRoot(document.getElementById("root")!).render(<StrictMode><App /></StrictMode>);
+}).catch((error) => {
+  const root = document.getElementById("root")!;
+  root.textContent = `Não foi possível iniciar a autenticação institucional: ${error instanceof Error ? error.message : "erro desconhecido"}`;
+});

@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Query, Res, StreamableFile } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
-import type { VersionStatus, Visibility } from "@prisma/client";
+import type { RelationType, VersionStatus, Visibility } from "@prisma/client";
 import type { CreateProcessInput, UpdateProcessInput } from "@furg/processos-contracts";
 import type { Response } from "express";
 import { ProcessService } from "./process.service.js";
@@ -13,14 +13,20 @@ export class ProcessController {
 
   @Get()
   @ApiOperation({ summary: "Pesquisa o catálogo de processos" })
-  list(@Query("q") q?: string, @Query("visibility") visibility?: Visibility, @Query("status") status?: VersionStatus) {
-    return this.processes.list({ q, visibility, status });
+  list(@Headers() headers: Record<string, string | undefined>, @Query("q") q?: string, @Query("visibility") visibility?: Visibility, @Query("status") status?: VersionStatus) {
+    return this.processes.list({ q, visibility, status }, headers);
+  }
+
+  @Get("relations/catalog")
+  @ApiOperation({ summary: "Lista as relações visíveis do mapa institucional" })
+  relations(@Headers() headers: Record<string, string | undefined>) {
+    return this.processes.listRelations(headers);
   }
 
   @Get(":locator")
-  @ApiOperation({ summary: "Obtém processo, versão vigente e visão textual" })
-  detail(@Param("locator") locator: string) {
-    return this.processes.detail(locator);
+  @ApiOperation({ summary: "Obtém processo, revisão governada mais recente e visão textual" })
+  detail(@Param("locator") locator: string, @Headers() headers: Record<string, string | undefined>) {
+    return this.processes.detail(locator, headers);
   }
 
   @Post()
@@ -38,6 +44,24 @@ export class ProcessController {
     @Headers() headers: Record<string, string | undefined>,
   ) {
     return this.processes.updateMetadata(processId, versionId, body, headers);
+  }
+
+  @Post(":processId/versions/:versionId/relations")
+  @ApiOperation({ summary: "Registra uma relação de saída entre processos" })
+  createRelation(@Param("processId") processId: string, @Param("versionId") versionId: string, @Body() body: { targetProcessId: string; type: RelationType; label?: string; sourceElementId?: string }, @Headers() headers: Record<string, string | undefined>) {
+    return this.processes.createRelation(processId, versionId, body, headers);
+  }
+
+  @Patch(":processId/versions/:versionId/relations/:relationId")
+  @ApiOperation({ summary: "Altera uma relação de saída entre processos" })
+  updateRelation(@Param("processId") processId: string, @Param("versionId") versionId: string, @Param("relationId") relationId: string, @Body() body: { type: RelationType; label?: string; sourceElementId?: string }, @Headers() headers: Record<string, string | undefined>) {
+    return this.processes.updateRelation(processId, versionId, relationId, body, headers);
+  }
+
+  @Delete(":processId/versions/:versionId/relations/:relationId")
+  @ApiOperation({ summary: "Remove uma relação de saída entre processos" })
+  deleteRelation(@Param("processId") processId: string, @Param("versionId") versionId: string, @Param("relationId") relationId: string, @Headers() headers: Record<string, string | undefined>) {
+    return this.processes.deleteRelation(processId, versionId, relationId, headers);
   }
 
   @Post("import")

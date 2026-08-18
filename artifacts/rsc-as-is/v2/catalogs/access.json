@@ -1,0 +1,141 @@
+{
+  "apiVersion": "processos.furg.br/v2",
+  "kind": "AccessCatalog",
+  "metadata": {
+    "id": "40000000-0000-4000-8000-000000000008",
+    "key": "processo.rsc.pcctae.acesso",
+    "version": "2.0.0",
+    "visibility": "TECHNICAL",
+    "status": "DRAFT",
+    "title": "Atores, perfis, grupos e políticas do RSC",
+    "createdAt": "2026-08-16T21:00:00.000Z",
+    "updatedAt": "2026-08-16T21:00:00.000Z",
+    "labels": {
+      "perspective": "AS_IS",
+      "origin": "reverse-engineering"
+    }
+  },
+  "spec": {
+    "actors": [
+      {
+        "key": "ator.servidor",
+        "label": "Servidor requerente",
+        "kind": "AFFILIATION"
+      },
+      {
+        "key": "ator.comissao",
+        "label": "Comissão RSC",
+        "kind": "ORGANIZATIONAL_ROLE"
+      },
+      {
+        "key": "ator.sistema",
+        "label": "Aplicação RSC",
+        "kind": "SYSTEM_ACTOR"
+      },
+      {
+        "key": "ator.processamento.automatico",
+        "label": "Processamento automático",
+        "kind": "SYSTEM_ACTOR"
+      },
+      {
+        "key": "ator.sei.progep",
+        "label": "SEI / PROGEP",
+        "kind": "SYSTEM_ACTOR"
+      }
+    ],
+    "profiles": [
+      {
+        "key": "perfil.comissao.rsc",
+        "label": "PERFIL_COMISSAO_RSC",
+        "groupRefs": [
+          "grupo.rsc.comissao"
+        ],
+        "sourceSystemRef": "sistema.casca"
+      }
+    ],
+    "groups": [
+      {
+        "key": "grupo.rsc.servidor",
+        "label": "RSC - Servidor",
+        "grantRefs": [
+          "concessao.rsc.servidor"
+        ],
+        "sourceSystemRef": "sistema.casca"
+      },
+      {
+        "key": "grupo.rsc.comissao",
+        "label": "RSC - Comissão",
+        "grantRefs": [
+          "concessao.rsc.comissao"
+        ],
+        "sourceSystemRef": "sistema.casca"
+      }
+    ],
+    "grants": [
+      {
+        "key": "concessao.rsc.servidor",
+        "subjectRefs": [
+          "grupo.rsc.servidor"
+        ],
+        "actionRefs": [
+          "acao.rsc.pedido.instruir",
+          "acao.rsc.pedido.enviar.para.avaliacao",
+          "acao.rsc.servidor.responder.diligencia"
+        ],
+        "resourceRefs": [
+          "dado.rsc.pedido"
+        ],
+        "policyRefs": [
+          "politica.rsc.escopo.servidor"
+        ]
+      },
+      {
+        "key": "concessao.rsc.comissao",
+        "subjectRefs": [
+          "grupo.rsc.comissao",
+          "perfil.comissao.rsc"
+        ],
+        "actionRefs": [
+          "acao.rsc.comissao.atribuir.responsavel",
+          "acao.rsc.comissao.analisar.itens",
+          "acao.rsc.comissao.abrir.diligencia",
+          "acao.rsc.comissao.registrar.parecer.final",
+          "acao.rsc.comissao.acompanhar.envio.sei",
+          "acao.rsc.comissao.confirmar.retentativa.sei"
+        ],
+        "resourceRefs": [
+          "dado.rsc.pedido"
+        ],
+        "policyRefs": [
+          "politica.rsc.perfil.comissao"
+        ]
+      }
+    ],
+    "policies": [
+      {
+        "key": "politica.rsc.escopo.servidor",
+        "label": "Escopo do servidor",
+        "layer": "RECORD_SCOPE",
+        "effect": "ALLOW",
+        "expressionLanguage": "CEL",
+        "expression": "pedido.id_funcionario == sessao.id_funcionario",
+        "description": "O servidor atua somente sobre o próprio pedido.",
+        "evidenceRefs": [
+          "evidencia.rsc.implementacao"
+        ]
+      },
+      {
+        "key": "politica.rsc.perfil.comissao",
+        "label": "Perfil Comissão RSC vigente",
+        "layer": "CAPABILITY",
+        "effect": "ALLOW",
+        "expressionLanguage": "CEL",
+        "expression": "perfil == PERFIL_COMISSAO_RSC && vigente",
+        "description": "Exige perfil institucional vigente e grupo de acesso da comissão.",
+        "evidenceRefs": [
+          "evidencia.rsc.implementacao"
+        ]
+      }
+    ]
+  }
+}

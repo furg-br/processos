@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@furg/processos-contracts": "workspace:*",
+    "bpmn-moddle": "^9.0.4",
     "fast-xml-parser": "^4.5.3"
   },
   "devDependencies": {

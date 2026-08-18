@@ -11,6 +11,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "schemas:v2": "node scripts/generate-v2-schemas.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
@@ -18,7 +19,10 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
     "typescript": "^5.7.3",
-    "vitest": "^3.0.7"
+    "vitest": "^3.0.7",
+    "zod-to-json-schema": "^3.24.6"
   }
 }

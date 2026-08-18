@@ -1,0 +1,23 @@
+{
+  "evaluatedAt": "2026-08-16T22:56:13.162Z",
+  "passed": true,
+  "distinctAgents": true,
+  "reports": [
+    {
+      "agent": "agent-b",
+      "structurallyValid": true,
+      "schemaErrors": [],
+      "requiredRefsFound": 6,
+      "requiredRefsTotal": 6,
+      "coverage": 1
+    },
+    {
+      "agent": "agent-b-rsc-bundle-reader",
+      "structurallyValid": true,
+      "schemaErrors": [],
+      "requiredRefsFound": 6,
+      "requiredRefsTotal": 6,
+      "coverage": 1
+    }
+  ]
+}

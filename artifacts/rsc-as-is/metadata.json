@@ -1,0 +1,1302 @@
+{
+  "schemaVersion": "furg.process/v1",
+  "process": {
+    "id": "30000000-0000-4000-8000-000000000001",
+    "slug": "reconhecimento-saberes-competencias-rsc-pcctae-as-is",
+    "title": "Reconhecimento de Saberes e Competências - RSC-PCCTAE",
+    "description": "Processo AS-IS extraído da aplicação RSC do SRH, do requerimento em rascunho à entrega do dossiê final à PROGEP pelo SEI.",
+    "category": "Gestão de pessoas",
+    "audience": "Servidores técnico-administrativos em educação, Comissão RSC e PROGEP",
+    "visibility": "INTERNAL",
+    "ownerUnit": {
+      "acronym": "PROGEP",
+      "name": "Pró-Reitoria de Gestão e Desenvolvimento de Pessoas"
+    },
+    "participantUnits": [
+      {
+        "acronym": "CRSC",
+        "name": "Comissão RSC-PCCTAE"
+      },
+      {
+        "acronym": "PROGEP",
+        "name": "Pró-Reitoria de Gestão e Desenvolvimento de Pessoas"
+      }
+    ],
+    "updatedAt": "2026-08-16T21:00:00.000Z"
+  },
+  "version": {
+    "id": "31000000-0000-4000-8000-000000000001",
+    "revision": 1,
+    "perspective": "AS_IS",
+    "status": "DRAFT",
+    "createdAt": "2026-08-16T21:00:00.000Z",
+    "publishedAt": null
+  },
+  "outline": [
+    {
+      "id": "StartEvent_Eligible",
+      "type": "startEvent",
+      "name": "Servidor elegível decide requerer RSC",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [],
+      "outgoing": [
+        "Flow_01"
+      ]
+    },
+    {
+      "id": "EndEvent_Delivered",
+      "type": "endEvent",
+      "name": "Dossiê entregue; tramitação continua no SEI",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_26"
+      ],
+      "outgoing": []
+    },
+    {
+      "id": "Event_Response",
+      "type": "intermediateCatchEvent",
+      "name": "Resposta recebida",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_09_Response"
+      ],
+      "outgoing": [
+        "Flow_10"
+      ]
+    },
+    {
+      "id": "Event_Deadline",
+      "type": "intermediateCatchEvent",
+      "name": "Prazo expirado",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_09_Deadline"
+      ],
+      "outgoing": [
+        "Flow_14"
+      ]
+    },
+    {
+      "id": "Activity_Instruct",
+      "type": "userTask",
+      "name": "Criar e instruir pedido em rascunho",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_01"
+      ],
+      "outgoing": [
+        "Flow_02"
+      ]
+    },
+    {
+      "id": "Activity_Submit",
+      "type": "userTask",
+      "name": "Enviar pedido para avaliação",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_02"
+      ],
+      "outgoing": [
+        "Flow_02B"
+      ]
+    },
+    {
+      "id": "Activity_Assign",
+      "type": "userTask",
+      "name": "Atribuir responsável pela avaliação",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_03"
+      ],
+      "outgoing": [
+        "Flow_04"
+      ]
+    },
+    {
+      "id": "Activity_Analyze",
+      "type": "userTask",
+      "name": "Analisar itens e preparar avaliação",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_04",
+        "Flow_13"
+      ],
+      "outgoing": [
+        "Flow_05"
+      ]
+    },
+    {
+      "id": "Activity_OpenDiligence",
+      "type": "userTask",
+      "name": "Abrir diligência seletiva de 60 dias",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_06_Yes"
+      ],
+      "outgoing": [
+        "Flow_07"
+      ]
+    },
+    {
+      "id": "Activity_RespondDiligence",
+      "type": "userTask",
+      "name": "Corrigir somente alvos liberados e responder",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_10"
+      ],
+      "outgoing": [
+        "Flow_11"
+      ]
+    },
+    {
+      "id": "Activity_FinalOpinion",
+      "type": "userTask",
+      "name": "Registrar Parecer final deferindo ou indeferindo",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_06_No"
+      ],
+      "outgoing": [
+        "Flow_16"
+      ]
+    },
+    {
+      "id": "Activity_Accompany",
+      "type": "userTask",
+      "name": "Iniciar ou acompanhar envio ao SEI",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_18"
+      ],
+      "outgoing": [
+        "Flow_19"
+      ]
+    },
+    {
+      "id": "Activity_ConfirmRetry",
+      "type": "userTask",
+      "name": "Verificar SEI e confirmar nova tentativa",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_22_Error"
+      ],
+      "outgoing": [
+        "Flow_23"
+      ]
+    },
+    {
+      "id": "Activity_Protocol",
+      "type": "serviceTask",
+      "name": "Validar, protocolar e publicar memorial",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_02B"
+      ],
+      "outgoing": [
+        "Flow_03"
+      ]
+    },
+    {
+      "id": "Activity_RecordDiligence",
+      "type": "serviceTask",
+      "name": "Bloquear escopo e notificar servidor",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_07"
+      ],
+      "outgoing": [
+        "Flow_08"
+      ]
+    },
+    {
+      "id": "Activity_ValidateResponse",
+      "type": "serviceTask",
+      "name": "Versionar correções e retornar para análise",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_11"
+      ],
+      "outgoing": [
+        "Flow_13"
+      ]
+    },
+    {
+      "id": "Activity_AutoDeny",
+      "type": "serviceTask",
+      "name": "Indeferir automaticamente por prazo",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_14"
+      ],
+      "outgoing": [
+        "Flow_15"
+      ]
+    },
+    {
+      "id": "Activity_Freeze",
+      "type": "serviceTask",
+      "name": "Gerar e congelar dossiê final",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_17"
+      ],
+      "outgoing": [
+        "Flow_18"
+      ]
+    },
+    {
+      "id": "Activity_SendSei",
+      "type": "serviceTask",
+      "name": "Criar processo restrito e incluir documentos",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_19",
+        "Flow_25"
+      ],
+      "outgoing": [
+        "Flow_20"
+      ]
+    },
+    {
+      "id": "Activity_Retry",
+      "type": "serviceTask",
+      "name": "Retomar envio sem duplicar documentos",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_23"
+      ],
+      "outgoing": [
+        "Flow_25"
+      ]
+    },
+    {
+      "id": "Activity_RouteProgep",
+      "type": "sendTask",
+      "name": "Tramitar processo para a PROGEP",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_22_Success"
+      ],
+      "outgoing": [
+        "Flow_26"
+      ]
+    },
+    {
+      "id": "Activity_ReceiveSei",
+      "type": "receiveTask",
+      "name": "Receber dossiê nato-digital no SEI",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_20"
+      ],
+      "outgoing": [
+        "Flow_21"
+      ]
+    },
+    {
+      "id": "Gateway_NeedsDiligence",
+      "type": "exclusiveGateway",
+      "name": "Diligência necessária?",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_05"
+      ],
+      "outgoing": [
+        "Flow_06_Yes",
+        "Flow_06_No"
+      ]
+    },
+    {
+      "id": "Gateway_FinalMerge",
+      "type": "exclusiveGateway",
+      "name": "Parecer terminal registrado",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_15",
+        "Flow_16"
+      ],
+      "outgoing": [
+        "Flow_17"
+      ]
+    },
+    {
+      "id": "Gateway_SendResult",
+      "type": "exclusiveGateway",
+      "name": "Envio concluído?",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_21"
+      ],
+      "outgoing": [
+        "Flow_22_Success",
+        "Flow_22_Error"
+      ]
+    },
+    {
+      "id": "Gateway_WaitDiligence",
+      "type": "eventBasedGateway",
+      "name": "Resposta no prazo?",
+      "parentId": "Process_RSC_AS_IS",
+      "incoming": [
+        "Flow_08"
+      ],
+      "outgoing": [
+        "Flow_09_Response",
+        "Flow_09_Deadline"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "bpmnElementId": "Activity_Instruct",
+      "role": "Servidor requerente",
+      "softwareBindings": [
+        {
+          "operationId": "10000000-0000-4000-8000-000000000001",
+          "kind": "SUPPORTS"
+        },
+        {
+          "operationId": "10000000-0000-4000-8000-000000000002",
+          "kind": "SUPPORTS"
+        },
+        {
+          "operationId": "10000000-0000-4000-8000-000000000003",
+          "kind": "SUPPORTS"
+        },
+        {
+          "operationId": "10000000-0000-4000-8000-000000000004",
+          "kind": "SUPPORTS"
+        },
+        {
+          "operationId": "10000000-0000-4000-8000-000000000005",
+          "kind": "SUPPORTS"
+        },
+        {
+          "operationId": "10000000-0000-4000-8000-000000000006",
+          "kind": "SUPPORTS"
+        }
+      ],
+      "dataBindings": [
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000001",
+          "direction": "INPUT"
+        },
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000001",
+          "direction": "OUTPUT"
+        },
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000002",
+          "direction": "INPUT"
+        },
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000002",
+          "direction": "OUTPUT"
+        }
+      ]
+    },
+    {
+      "bpmnElementId": "Activity_Submit",
+      "role": "Servidor requerente",
+      "softwareBindings": [
+        {
+          "operationId": "10000000-0000-4000-8000-000000000007",
+          "kind": "SUPPORTS"
+        }
+      ],
+      "dataBindings": [
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000001",
+          "direction": "INPUT"
+        },
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000002",
+          "direction": "INPUT"
+        },
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000001",
+          "direction": "OUTPUT"
+        }
+      ]
+    },
+    {
+      "bpmnElementId": "Activity_Protocol",
+      "role": "Sistema RSC",
+      "softwareBindings": [
+        {
+          "operationId": "10000000-0000-4000-8000-000000000007",
+          "kind": "AUTOMATES"
+        }
+      ],
+      "dataBindings": [
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000001",
+          "direction": "INPUT"
+        },
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000002",
+          "direction": "INPUT"
+        },
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000001",
+          "direction": "OUTPUT"
+        }
+      ]
+    },
+    {
+      "bpmnElementId": "Activity_Assign",
+      "role": "Comissão RSC",
+      "softwareBindings": [
+        {
+          "operationId": "10000000-0000-4000-8000-000000000008",
+          "kind": "SUPPORTS"
+        },
+        {
+          "operationId": "10000000-0000-4000-8000-000000000009",
+          "kind": "SUPPORTS"
+        }
+      ],
+      "dataBindings": [
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000001",
+          "direction": "INPUT"
+        },
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000001",
+          "direction": "OUTPUT"
+        }
+      ]
+    },
+    {
+      "bpmnElementId": "Activity_Analyze",
+      "role": "Comissão RSC - responsável atribuído",
+      "softwareBindings": [
+        {
+          "operationId": "10000000-0000-4000-8000-000000000010",
+          "kind": "SUPPORTS"
+        },
+        {
+          "operationId": "10000000-0000-4000-8000-000000000011",
+          "kind": "SUPPORTS"
+        }
+      ],
+      "dataBindings": [
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000002",
+          "direction": "INPUT"
+        },
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000002",
+          "direction": "OUTPUT"
+        },
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000004",
+          "direction": "OUTPUT"
+        }
+      ]
+    },
+    {
+      "bpmnElementId": "Activity_OpenDiligence",
+      "role": "Comissão RSC",
+      "softwareBindings": [
+        {
+          "operationId": "10000000-0000-4000-8000-000000000012",
+          "kind": "SUPPORTS"
+        }
+      ],
+      "dataBindings": [
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000003",
+          "direction": "OUTPUT"
+        }
+      ]
+    },
+    {
+      "bpmnElementId": "Activity_RecordDiligence",
+      "role": "Sistema RSC",
+      "softwareBindings": [
+        {
+          "operationId": "10000000-0000-4000-8000-000000000012",
+          "kind": "AUTOMATES"
+        }
+      ],
+      "dataBindings": [
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000003",
+          "direction": "OUTPUT"
+        }
+      ]
+    },
+    {
+      "bpmnElementId": "Activity_RespondDiligence",
+      "role": "Servidor requerente",
+      "softwareBindings": [
+        {
+          "operationId": "10000000-0000-4000-8000-000000000013",
+          "kind": "SUPPORTS"
+        }
+      ],
+      "dataBindings": [
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000003",
+          "direction": "INPUT"
+        },
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000001",
+          "direction": "OUTPUT"
+        },
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000002",
+          "direction": "OUTPUT"
+        }
+      ]
+    },
+    {
+      "bpmnElementId": "Activity_ValidateResponse",
+      "role": "Sistema RSC",
+      "softwareBindings": [
+        {
+          "operationId": "10000000-0000-4000-8000-000000000013",
+          "kind": "AUTOMATES"
+        }
+      ],
+      "dataBindings": [
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000003",
+          "direction": "OUTPUT"
+        },
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000001",
+          "direction": "OUTPUT"
+        }
+      ]
+    },
+    {
+      "bpmnElementId": "Activity_AutoDeny",
+      "role": "Processamento automático",
+      "softwareBindings": [
+        {
+          "operationId": "10000000-0000-4000-8000-000000000017",
+          "kind": "AUTOMATES"
+        }
+      ],
+      "dataBindings": [
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000003",
+          "direction": "INPUT"
+        },
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000004",
+          "direction": "OUTPUT"
+        }
+      ]
+    },
+    {
+      "bpmnElementId": "Activity_FinalOpinion",
+      "role": "Comissão RSC",
+      "softwareBindings": [
+        {
+          "operationId": "10000000-0000-4000-8000-000000000014",
+          "kind": "SUPPORTS"
+        }
+      ],
+      "dataBindings": [
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000001",
+          "direction": "INPUT"
+        },
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000002",
+          "direction": "INPUT"
+        },
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000004",
+          "direction": "OUTPUT"
+        }
+      ]
+    },
+    {
+      "bpmnElementId": "Activity_Freeze",
+      "role": "Sistema RSC",
+      "softwareBindings": [
+        {
+          "operationId": "10000000-0000-4000-8000-000000000015",
+          "kind": "AUTOMATES"
+        }
+      ],
+      "dataBindings": [
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000004",
+          "direction": "INPUT"
+        },
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000005",
+          "direction": "OUTPUT"
+        }
+      ]
+    },
+    {
+      "bpmnElementId": "Activity_Accompany",
+      "role": "Comissão RSC",
+      "softwareBindings": [
+        {
+          "operationId": "10000000-0000-4000-8000-000000000016",
+          "kind": "SUPPORTS"
+        }
+      ],
+      "dataBindings": [
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000005",
+          "direction": "INPUT"
+        }
+      ]
+    },
+    {
+      "bpmnElementId": "Activity_SendSei",
+      "role": "Sistema RSC",
+      "softwareBindings": [
+        {
+          "operationId": "10000000-0000-4000-8000-000000000016",
+          "kind": "AUTOMATES"
+        }
+      ],
+      "dataBindings": [
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000005",
+          "direction": "INPUT"
+        },
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000005",
+          "direction": "OUTPUT"
+        }
+      ]
+    },
+    {
+      "bpmnElementId": "Activity_ReceiveSei",
+      "role": "SEI",
+      "softwareBindings": [],
+      "dataBindings": [
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000005",
+          "direction": "INPUT"
+        }
+      ]
+    },
+    {
+      "bpmnElementId": "Activity_ConfirmRetry",
+      "role": "Comissão RSC",
+      "softwareBindings": [
+        {
+          "operationId": "10000000-0000-4000-8000-000000000016",
+          "kind": "SUPPORTS"
+        }
+      ],
+      "dataBindings": [
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000005",
+          "direction": "INPUT"
+        }
+      ]
+    },
+    {
+      "bpmnElementId": "Activity_Retry",
+      "role": "Sistema RSC",
+      "softwareBindings": [
+        {
+          "operationId": "10000000-0000-4000-8000-000000000016",
+          "kind": "AUTOMATES"
+        }
+      ],
+      "dataBindings": [
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000005",
+          "direction": "INPUT"
+        },
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000005",
+          "direction": "OUTPUT"
+        }
+      ]
+    },
+    {
+      "bpmnElementId": "Activity_RouteProgep",
+      "role": "SEI / PROGEP",
+      "softwareBindings": [],
+      "dataBindings": [
+        {
+          "informationSchemaId": "21000000-0000-4000-8000-000000000005",
+          "direction": "INPUT"
+        }
+      ]
+    }
+  ],
+  "relations": [],
+  "informationSchemas": [
+    {
+      "id": "21000000-0000-4000-8000-000000000001",
+      "assetId": "20000000-0000-4000-8000-000000000001",
+      "name": "Pedido de RSC-PCCTAE",
+      "version": 1,
+      "visibility": "INTERNAL",
+      "jsonSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://processos.furg.br/schemas/rsc-pedido.v1.json",
+        "title": "Pedido de RSC-PCCTAE",
+        "description": "Contrato conceitual dos dados cadastrais e do estado principal do pedido implementado no SRH.",
+        "type": "object",
+        "required": [
+          "idPedido",
+          "idFuncionario",
+          "nivelPleiteado",
+          "memorial",
+          "declaracoes",
+          "statusPrincipal"
+        ],
+        "properties": {
+          "idPedido": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "idFuncionario": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "catalogoVersao": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "nivelPleiteado": {
+            "type": "string",
+            "enum": [
+              "I",
+              "II",
+              "III",
+              "IV",
+              "V",
+              "VI"
+            ]
+          },
+          "memorial": {
+            "type": "string",
+            "minLength": 1,
+            "description": "HTML básico sanitizado; torna-se público no protocolo."
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "readOnly": true
+          },
+          "telefone": {
+            "type": "string",
+            "minLength": 1,
+            "readOnly": true
+          },
+          "processoRscAnterior": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "numero": {
+                "type": "string"
+              },
+              "pontosSaldoDeclarado": {
+                "type": "number",
+                "minimum": 0
+              },
+              "pontosSaldoReconhecido": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          },
+          "declaracoes": {
+            "type": "object",
+            "required": [
+              "exercicioCargo",
+              "naoReutilizacao",
+              "autenticidade",
+              "responsabilidade"
+            ],
+            "properties": {
+              "exercicioCargo": {
+                "const": true
+              },
+              "naoReutilizacao": {
+                "const": true
+              },
+              "autenticidade": {
+                "const": true
+              },
+              "responsabilidade": {
+                "const": true
+              }
+            },
+            "additionalProperties": false
+          },
+          "statusPrincipal": {
+            "type": "string",
+            "enum": [
+              "RASCUNHO",
+              "EM_ANALISE",
+              "EM_DILIGENCIA",
+              "DEFERIDO",
+              "INDEFERIDO"
+            ]
+          },
+          "responsavelAvaliacao": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "dataProtocolo": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "dataDecisao": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "versaoFinal": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "createdAt": "2026-08-16T21:00:00.000Z"
+    },
+    {
+      "id": "21000000-0000-4000-8000-000000000002",
+      "assetId": "20000000-0000-4000-8000-000000000002",
+      "name": "Item e comprovante do pedido de RSC",
+      "version": 1,
+      "visibility": "INTERNAL",
+      "jsonSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://processos.furg.br/schemas/rsc-item-evidencia.v1.json",
+        "title": "Item e comprovante do pedido de RSC",
+        "type": "object",
+        "required": [
+          "criterio",
+          "fatoGerador",
+          "apuracao",
+          "comprovante",
+          "statusAnalise"
+        ],
+        "properties": {
+          "idItem": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "criterio": {
+            "type": "string",
+            "pattern": "^(I|II|III|IV|V|VI)\\.[0-9]+$"
+          },
+          "variante": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "TITULAR",
+              "SUBSTITUTO",
+              null
+            ]
+          },
+          "fatoGerador": {
+            "type": "string",
+            "minLength": 1
+          },
+          "dataInicio": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "dataFim": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "funcaoEmExercicio": {
+            "type": "boolean",
+            "default": false
+          },
+          "quantidadeInformada": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "apuracao": {
+            "type": "string",
+            "enum": [
+              "CONTAGEM",
+              "ANO_FRACAO_MAIOR_SEIS_MESES",
+              "MES"
+            ]
+          },
+          "observacaoServidor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "comprovante": {
+            "type": "object",
+            "required": [
+              "nomeArquivo",
+              "mimeType",
+              "descricao"
+            ],
+            "properties": {
+              "nomeArquivo": {
+                "type": "string",
+                "pattern": "\\.pdf$"
+              },
+              "mimeType": {
+                "const": "application/pdf"
+              },
+              "descricao": {
+                "type": "string",
+                "minLength": 1
+              },
+              "hash": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "versao": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          "statusAnalise": {
+            "type": "string",
+            "enum": [
+              "PENDENTE",
+              "DEFERIDO",
+              "PARCIAL",
+              "INDEFERIDO",
+              "COMPLEMENTACAO",
+              "EXCEDENTE"
+            ]
+          },
+          "quantidadeReconhecida": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "pontosDeferidos": {
+            "type": "number",
+            "minimum": 0
+          },
+          "justificativaAnalise": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "createdAt": "2026-08-16T21:00:00.000Z"
+    },
+    {
+      "id": "21000000-0000-4000-8000-000000000003",
+      "assetId": "20000000-0000-4000-8000-000000000003",
+      "name": "Diligência seletiva do RSC",
+      "version": 1,
+      "visibility": "INTERNAL",
+      "jsonSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://processos.furg.br/schemas/rsc-diligencia.v1.json",
+        "title": "Diligência seletiva do RSC",
+        "type": "object",
+        "required": [
+          "origem",
+          "motivo",
+          "prazo",
+          "alvos",
+          "status"
+        ],
+        "properties": {
+          "idDiligencia": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "origem": {
+            "const": "ANALISE"
+          },
+          "motivo": {
+            "type": "string",
+            "minLength": 1
+          },
+          "prazo": {
+            "type": "string",
+            "format": "date"
+          },
+          "alvos": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "object",
+              "required": [
+                "tipo"
+              ],
+              "properties": {
+                "tipo": {
+                  "type": "string",
+                  "enum": [
+                    "CAMPO",
+                    "SECAO_MEMORIAL",
+                    "ITEM",
+                    "COMPROVANTE",
+                    "PRIORIDADE"
+                  ]
+                },
+                "idReferencia": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 1
+                },
+                "codigo": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "corrigido": {
+                  "type": "boolean",
+                  "default": false
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "descricaoResposta": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ABERTA",
+              "RESPONDIDA",
+              "EXPIRADA"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "createdAt": "2026-08-16T21:00:00.000Z"
+    },
+    {
+      "id": "21000000-0000-4000-8000-000000000004",
+      "assetId": "20000000-0000-4000-8000-000000000004",
+      "name": "Parecer da Comissão RSC",
+      "version": 1,
+      "visibility": "INTERNAL",
+      "jsonSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://processos.furg.br/schemas/rsc-parecer.v1.json",
+        "title": "Parecer da Comissão RSC",
+        "type": "object",
+        "required": [
+          "resultado",
+          "texto",
+          "fundamentos",
+          "dataDecisao"
+        ],
+        "properties": {
+          "resultado": {
+            "type": "string",
+            "enum": [
+              "DEFERIDO",
+              "INDEFERIDO"
+            ]
+          },
+          "texto": {
+            "type": "string",
+            "minLength": 1,
+            "description": "HTML básico sanitizado."
+          },
+          "fundamentos": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "saldoReconhecido": {
+            "type": "number",
+            "minimum": 0
+          },
+          "pontosItensDeferidos": {
+            "type": "number",
+            "minimum": 0
+          },
+          "pontosTotalConsiderado": {
+            "type": "number",
+            "minimum": 0
+          },
+          "criteriosDistintosDeferidos": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "dataDecisao": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "automaticoPorPrazo": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "createdAt": "2026-08-16T21:00:00.000Z"
+    },
+    {
+      "id": "21000000-0000-4000-8000-000000000005",
+      "assetId": "20000000-0000-4000-8000-000000000005",
+      "name": "Dossiê final e envio do RSC ao SEI",
+      "version": 1,
+      "visibility": "INTERNAL",
+      "jsonSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://processos.furg.br/schemas/rsc-dossie-envio-sei.v1.json",
+        "title": "Dossiê final e envio do RSC ao SEI",
+        "type": "object",
+        "required": [
+          "versaoFinal",
+          "documentos",
+          "statusEnvio",
+          "chaveIdempotencia"
+        ],
+        "properties": {
+          "versaoFinal": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "dataCongelamento": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "documentos": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "type": "object",
+              "required": [
+                "tipo",
+                "nomeArquivo",
+                "hash"
+              ],
+              "properties": {
+                "tipo": {
+                  "type": "string",
+                  "enum": [
+                    "REQUERIMENTO_FINAL",
+                    "MEMORIAL_FINAL",
+                    "PARECER_FINAL",
+                    "COMPROVANTE",
+                    "PRIORIDADE"
+                  ]
+                },
+                "nomeArquivo": {
+                  "type": "string"
+                },
+                "hash": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "numeroSei": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "PENDENTE",
+                    "ENVIANDO",
+                    "ENVIADO",
+                    "ERRO"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "statusEnvio": {
+            "type": "string",
+            "enum": [
+              "NAO_INICIADO",
+              "ENVIANDO",
+              "ENVIADO",
+              "ERRO"
+            ]
+          },
+          "chaveIdempotencia": {
+            "type": "string",
+            "minLength": 1
+          },
+          "numeroProcessoSei": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "unidadeOrigem": {
+            "const": "CRSC-PCCTAE"
+          },
+          "unidadeDestino": {
+            "const": "PROGEP"
+          },
+          "erro": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "createdAt": "2026-08-16T21:00:00.000Z"
+    }
+  ],
+  "provenance": {
+    "exportedBy": "Mapeamento reverso assistido por IA",
+    "exportedAt": "2026-08-16T21:00:00.000Z",
+    "source": "CASCA ERP commit 9b7fdce193c2204b4b3ac2a7621bbf4d7e09a271"
+  }
+}

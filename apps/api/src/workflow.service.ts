@@ -20,6 +20,10 @@ const transitions: Record<VersionStatus, Partial<Record<WorkflowAction, VersionS
 
 @Injectable()
 export class WorkflowService {
+  actions(status: VersionStatus): WorkflowAction[] {
+    return Object.keys(transitions[status] ?? {}) as WorkflowAction[];
+  }
+
   transition(status: VersionStatus, action: WorkflowAction): VersionStatus {
     const next = transitions[status]?.[action];
     if (!next) throw new BadRequestException(`A ação ${action} não é permitida quando a versão está em ${status}.`);

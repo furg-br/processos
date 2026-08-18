@@ -1,0 +1,11 @@
+{
+  "experiment": "process-bundle-v2-agent-consumption",
+  "contractVersion": "processos.furg.br/v2",
+  "bundle": "rsc-as-is.process-bundle-v2.zip",
+  "instructions": [
+    "Identifique onde o servidor cria o pedido e qual ação o encaminha para avaliação.",
+    "Informe a operação técnica ligada à ação, sem inventar rotas ausentes.",
+    "Liste regras, efeitos, dados e evidências que uma implementação deve preservar.",
+    "Classifique toda conclusão como observada, documentada, inferida ou contestada conforme a proveniência."
+  ]
+}

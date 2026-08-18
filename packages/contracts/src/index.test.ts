@@ -1,4 +1,9 @@
 import { describe, expect, it } from "vitest";
+import Ajv2020 from "ajv/dist/2020.js";
+import addFormats from "ajv-formats";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { createProcessInputSchema, processBundleManifestSchema, statusLabels, updateProcessInputSchema } from "./index";
 
 describe("contratos públicos", () => {
@@ -34,5 +39,15 @@ describe("contratos públicos", () => {
       ownerUnitId: "00000000-0000-4000-8000-000000000001",
       perspective: "TO_BE",
     }).success).toBe(true);
+  });
+
+  it("publica JSON Schema consumível sem depender do runtime Zod", async () => {
+    const packageRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
+    const schema = JSON.parse(await readFile(resolve(packageRoot, "schemas/v2/process-definition.schema.json"), "utf8"));
+    const fixture = JSON.parse(await readFile(resolve(packageRoot, "../../artifacts/rsc-as-is/v2/process/process.json"), "utf8"));
+    const ajv = new Ajv2020({ allErrors: true, strict: false });
+    addFormats(ajv);
+    const validate = ajv.compile(schema);
+    expect(validate(fixture), JSON.stringify(validate.errors, null, 2)).toBe(true);
   });
 });

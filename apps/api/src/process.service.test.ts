@@ -1,7 +1,10 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { EMPTY_BPMN_XML } from "@furg/processos-bpmn";
 import { ProcessService } from "./process.service.js";
 import { WorkflowService } from "./workflow.service.js";
+import { AuthorizationService } from "./authorization.service.js";
+
+afterEach(() => vi.unstubAllEnvs());
 
 describe("consulta de processo por endereço legível", () => {
   it("procura pelo UUID ou slug e ignora processos arquivados", async () => {
@@ -16,6 +19,30 @@ describe("consulta de processo por endereço legível", () => {
         archivedAt: null,
       },
     }));
+  });
+});
+
+describe("visibilidade das revisões internas", () => {
+  it("mostra o rascunho à unidade autorizada e mantém a publicação como fallback para os demais", async () => {
+    vi.stubEnv("AUTH_MODE", "oidc");
+    const prisma = { delegatedAdministration: { findFirst: vi.fn().mockResolvedValue(null) } };
+    const service = new ProcessService(prisma as never, new WorkflowService(), new AuthorizationService(prisma as never));
+    const draft = { id: "draft", status: "DRAFT", perspective: "AS_IS" };
+    const published = { id: "published", status: "PUBLISHED", perspective: "AS_IS" };
+    const row = { ownerUnitId: "unit-1", versions: [draft, published] };
+
+    await expect((service as any).selectVersionForViewer(row, { "x-unit-ids": "unit-1", "x-platform-roles": "UNIT_EDITOR" })).resolves.toBe(draft);
+    await expect((service as any).selectVersionForViewer(row, { "x-unit-ids": "unit-2", "x-platform-roles": "UNIT_EDITOR" })).resolves.toBe(published);
+  });
+
+  it("protege processos restritos com papel e escopo de unidade", async () => {
+    vi.stubEnv("AUTH_MODE", "oidc");
+    const prisma = { delegatedAdministration: { findFirst: vi.fn().mockResolvedValue(null) } };
+    const service = new ProcessService(prisma as never, new WorkflowService(), new AuthorizationService(prisma as never));
+    const row = { visibility: "RESTRICTED", ownerUnitId: "unit-1" };
+
+    await expect((service as any).assertProcessVisibility(row, { "x-unit-ids": "unit-1", "x-platform-roles": "UNIT_EDITOR" })).rejects.toThrow("UNIT_ADMIN");
+    await expect((service as any).assertProcessVisibility(row, { "x-unit-ids": "unit-1", "x-platform-roles": "UNIT_ADMIN" })).resolves.toBeUndefined();
   });
 });
 
@@ -99,6 +126,52 @@ describe("persistência do BPMN", () => {
   });
 });
 
+describe("integridade das relações entre processos", () => {
+  it("rejeita elemento BPMN de origem que não existe na versão atual", async () => {
+    const transaction = vi.fn();
+    const prisma = {
+      processVersion: { findFirst: vi.fn().mockResolvedValue({ id: "version-id", status: "DRAFT", immutableAt: null, bpmnXml: EMPTY_BPMN_XML, process: { ownerUnitId: "unit-id" } }) },
+      process: { findFirst: vi.fn().mockResolvedValue({ id: "target-id", title: "Processo de destino" }) },
+      processRelation: { findMany: vi.fn().mockResolvedValue([]) },
+      $transaction: transaction,
+    };
+    const service = new ProcessService(prisma as never, new WorkflowService());
+
+    await expect(service.createRelation("source-id", "version-id", {
+      targetProcessId: "target-id", type: "RELATED_TO", sourceElementId: "Activity_Inexistente",
+    })).rejects.toThrow("não existe na versão atual");
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it("rejeita ciclo em relações de decomposição antes de alterar o banco", async () => {
+    const transaction = vi.fn();
+    const prisma = {
+      processVersion: { findFirst: vi.fn().mockResolvedValue({ id: "version-id", status: "DRAFT", immutableAt: null, bpmnXml: EMPTY_BPMN_XML, process: { ownerUnitId: "unit-id" } }) },
+      process: { findFirst: vi.fn().mockResolvedValue({ id: "target-id", title: "Processo de destino" }) },
+      processRelation: { findMany: vi.fn().mockResolvedValue([{ sourceProcessId: "target-id", targetProcessId: "source-id" }]) },
+      $transaction: transaction,
+    };
+    const service = new ProcessService(prisma as never, new WorkflowService());
+
+    await expect(service.createRelation("source-id", "version-id", {
+      targetProcessId: "target-id", type: "DECOMPOSES",
+    })).rejects.toThrow("criaria um ciclo");
+    expect(transaction).not.toHaveBeenCalled();
+  });
+});
+
+describe("governança de revisão", () => {
+  it("exige uma justificativa limitada para devolução e arquivamento", async () => {
+    const processVersion = { findFirst: vi.fn().mockResolvedValue({
+      id: "version-id", status: "UNIT_REVIEW", process: { ownerUnitId: "unit-id" }, activeBindingSet: null,
+    }) };
+    const service = new ProcessService({ processVersion } as never, new WorkflowService());
+
+    await expect(service.transition("process-id", "version-id", "REQUEST_CHANGES", "   ")).rejects.toThrow("Informe uma justificativa");
+    await expect(service.transition("process-id", "version-id", "REQUEST_CHANGES", "x".repeat(1001))).rejects.toThrow("no máximo 1.000 caracteres");
+  });
+});
+
 describe("remoção de versão em rascunho", () => {
   it("remove somente a versão e preserva a exclusão na auditoria de outra revisão", async () => {
     const tx = {
@@ -170,5 +243,32 @@ describe("remoção de versão em rascunho", () => {
       $transaction: vi.fn(async (operation: (client: typeof leasedTx) => Promise<void>) => operation(leasedTx)),
     } as never, new WorkflowService());
     await expect(leasedService.deleteDraftVersion("process-id", "version-id")).rejects.toThrow("Encerre a edição de Diogo");
+  });
+});
+
+describe("exportação de release v2", () => {
+  it("devolve o ZIP canônico preservado byte a byte", async () => {
+    const canonicalBundle = Buffer.from("zip-canônico-de-teste", "utf8");
+    const prisma = {
+      processVersion: { findFirst: vi.fn().mockResolvedValue({
+        id: "version-id",
+        processId: "process-id",
+        contractVersion: "v2",
+        conformanceProfile: "IMPLEMENTABLE",
+        process: { ownerUnitId: "unit-id" },
+        activeBindingSet: {
+          id: "binding-id",
+          bundleContent: canonicalBundle,
+          resources: [{ kind: "ProcessDefinition", content: { metadata: { key: "processo.teste" }, spec: { releaseId: "release-id" } } }],
+          files: [],
+        },
+      }) },
+    };
+    const service = new ProcessService(prisma as never, new WorkflowService());
+    vi.spyOn(service, "detail").mockResolvedValue({ id: "process-id" } as never);
+
+    const exported = await service.exportBundle("process-id", "version-id");
+
+    expect(exported.equals(canonicalBundle)).toBe(true);
   });
 });

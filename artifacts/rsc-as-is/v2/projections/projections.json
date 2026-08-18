@@ -1,0 +1,143 @@
+{
+  "apiVersion": "processos.furg.br/v2",
+  "kind": "ProjectionCatalog",
+  "metadata": {
+    "id": "40000000-0000-4000-8000-000000000010",
+    "key": "processo.rsc.pcctae.projecoes",
+    "version": "2.0.0",
+    "visibility": "INSTITUTIONAL",
+    "status": "DRAFT",
+    "title": "Projeções por público do RSC",
+    "createdAt": "2026-08-16T21:00:00.000Z",
+    "updatedAt": "2026-08-16T21:00:00.000Z",
+    "labels": {
+      "perspective": "AS_IS",
+      "origin": "reverse-engineering"
+    }
+  },
+  "spec": {
+    "projections": [
+      {
+        "key": "projecao.rsc.publica",
+        "audience": "PUBLIC",
+        "title": "Como funciona o RSC-PCCTAE",
+        "summary": "Visão pública das fases, responsáveis e tempos esperados, sem rotas, perfis ou detalhes internos.",
+        "phases": [
+          {
+            "key": "publica.fase.requerimento",
+            "label": "Preparação do requerimento",
+            "description": "Preparação do requerimento.",
+            "internalElementRefs": [
+              "rsc.pedido.instruir",
+              "rsc.pedido.enviar.para.avaliacao"
+            ],
+            "responsibleLabel": "Servidor requerente",
+            "expectedDurationLabel": "Tempo do interessado",
+            "nextPhaseRefs": [
+              "publica.fase.protocolo"
+            ]
+          },
+          {
+            "key": "publica.fase.protocolo",
+            "label": "Protocolo do pedido",
+            "description": "Protocolo do pedido.",
+            "internalElementRefs": [
+              "rsc.pedido.validar.protocolar.publicar"
+            ],
+            "responsibleLabel": "Sistema RSC",
+            "expectedDurationLabel": "Imediato após o envio",
+            "nextPhaseRefs": [
+              "publica.fase.analise"
+            ]
+          },
+          {
+            "key": "publica.fase.analise",
+            "label": "Análise da comissão",
+            "description": "Análise da comissão.",
+            "internalElementRefs": [
+              "rsc.comissao.atribuir.responsavel",
+              "rsc.comissao.analisar.itens"
+            ],
+            "responsibleLabel": "Comissão RSC",
+            "expectedDurationLabel": "Conforme fila de análise",
+            "nextPhaseRefs": [
+              "publica.fase.diligencia"
+            ]
+          },
+          {
+            "key": "publica.fase.diligencia",
+            "label": "Diligência",
+            "description": "Diligência.",
+            "internalElementRefs": [
+              "rsc.comissao.abrir.diligencia",
+              "rsc.servidor.responder.diligencia",
+              "rsc.sistema.registrar.diligencia",
+              "rsc.sistema.validar.resposta.diligencia",
+              "rsc.sistema.indeferir.diligencia.expirada"
+            ],
+            "responsibleLabel": "Servidor e Comissão RSC",
+            "expectedDurationLabel": "Até 60 dias para resposta",
+            "nextPhaseRefs": [
+              "publica.fase.parecer"
+            ]
+          },
+          {
+            "key": "publica.fase.parecer",
+            "label": "Parecer final",
+            "description": "Parecer final.",
+            "internalElementRefs": [
+              "rsc.comissao.registrar.parecer.final",
+              "rsc.sistema.gerar.dossie.final"
+            ],
+            "responsibleLabel": "Comissão RSC",
+            "expectedDurationLabel": "Após conclusão da análise",
+            "nextPhaseRefs": [
+              "publica.fase.envio.sei"
+            ]
+          },
+          {
+            "key": "publica.fase.envio.sei",
+            "label": "Envio ao SEI",
+            "description": "Envio ao SEI.",
+            "internalElementRefs": [
+              "rsc.comissao.acompanhar.envio.sei",
+              "rsc.comissao.confirmar.retentativa.sei",
+              "rsc.sistema.enviar.dossie.sei",
+              "rsc.sistema.retentar.envio.sei",
+              "rsc.sei.receber.dossie"
+            ],
+            "responsibleLabel": "Comissão RSC e sistema",
+            "expectedDurationLabel": "Após o parecer",
+            "nextPhaseRefs": [
+              "publica.fase.entrega.progep"
+            ]
+          },
+          {
+            "key": "publica.fase.entrega.progep",
+            "label": "Entrega à PROGEP",
+            "description": "Entrega à PROGEP.",
+            "internalElementRefs": [
+              "rsc.progep.receber.processo.sei"
+            ],
+            "responsibleLabel": "SEI / PROGEP",
+            "expectedDurationLabel": "Após confirmação do envio",
+            "nextPhaseRefs": []
+          }
+        ],
+        "excludedResourceRefs": [
+          "politica.rsc.escopo.servidor",
+          "politica.rsc.perfil.comissao",
+          "job.rsc.diligencias.expiradas"
+        ]
+      },
+      {
+        "key": "projecao.rsc.tecnica",
+        "audience": "TECHNICAL",
+        "title": "RSC - implementação AS-IS",
+        "summary": "Visão completa para análise, auditoria e geração assistida de software.",
+        "phases": [],
+        "excludedResourceRefs": []
+      }
+    ]
+  }
+}

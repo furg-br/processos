@@ -1,0 +1,10 @@
+{
+  "requiredRefs": [
+    "rsc.pedido.instruir",
+    "rsc.pedido.enviar.para.avaliacao",
+    "entrada.casca.srh.rsc.servidor",
+    "acao.rsc.pedido.enviar.para.avaliacao",
+    "operacao.rsc.enviarparaavaliacao",
+    "evidencia.rsc.implementacao"
+  ]
+}

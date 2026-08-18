@@ -1,0 +1,156 @@
+{
+  "agent": {
+    "id": "agent-b-rsc-bundle-reader",
+    "label": "Agente B - leitura autônoma do bundle RSC-PCCTAE v2 (sem contexto adicional, sem reviewer-only)"
+  },
+  "contractVersion": "processos.furg.br/v2",
+  "answers": [
+    {
+      "activityRef": "rsc.pedido.instruir",
+      "entryPointRefs": ["entrada.casca.srh.rsc.servidor"],
+      "actionRefs": ["acao.rsc.pedido.instruir"],
+      "operationRefs": [
+        "operacao.rsc.criarrascunho",
+        "operacao.rsc.salvarrascunho",
+        "operacao.rsc.incluiritem",
+        "operacao.rsc.alteraritem",
+        "operacao.rsc.excluiritem",
+        "operacao.rsc.excluircomprovante"
+      ],
+      "evidenceRefs": ["evidencia.rsc.implementacao"],
+      "claimStatus": "DOCUMENTED",
+      "label": "Criar e instruir pedido em rascunho",
+      "publicLabel": "Onde o servidor cria o pedido",
+      "phaseRef": "fase.requerimento",
+      "actorRefs": ["ator.servidor"],
+      "executionMode": "HUMAN_UI",
+      "formRefs": [
+        "formulario.formpedidoinserir",
+        "formulario.formpedidoalterar",
+        "formulario.formitempedidoinserir",
+        "formulario.formitemservidor"
+      ],
+      "dataRefs": ["dado.rsc.pedido", "dado.rsc.item.evidencia"],
+      "operationRoutes": [
+        { "operationRef": "operacao.rsc.criarrascunho", "method": "POST", "path": "/sistemas/srh/aplicacoes/rsc/inserir.php" },
+        { "operationRef": "operacao.rsc.salvarrascunho", "method": "POST", "path": "/sistemas/srh/aplicacoes/rsc/alterar.php" },
+        { "operationRef": "operacao.rsc.incluiritem", "method": "POST", "path": "/sistemas/srh/aplicacoes/rsc/itens/inserir.php" },
+        { "operationRef": "operacao.rsc.alteraritem", "method": "POST", "path": "/sistemas/srh/aplicacoes/rsc/itens/alterar.php" },
+        { "operationRef": "operacao.rsc.excluiritem", "method": "POST", "path": "/sistemas/srh/aplicacoes/rsc/itens/apagar.php" },
+        { "operationRef": "operacao.rsc.excluircomprovante", "method": "POST", "path": "/sistemas/srh/aplicacoes/rsc/itens/remover_comprovante.php" }
+      ],
+      "rulesToPreserve": [
+        "Data/hora de abertura do período alcançada",
+        "Servidor elegível",
+        "E-mail principal válido e telefone pessoal cadastrado",
+        "Pedido pertence ao servidor da sessão (politica.rsc.escopo.servidor)",
+        "status_principal em RASCUNHO (ou EM_DILIGENCIA apenas para alvos seletivamente liberados, conforme precondicao.rsc.pedido.instruir.6/7/8/12)",
+        "PDF de comprovante é obrigatório por item",
+        "Item atual e comprovante devem pertencer à versão/pedido vigente do próprio servidor"
+      ],
+      "effectsToPreserve": [
+        { "type": "UPDATE_DATA", "dataRef": "dado.rsc.pedido" },
+        { "type": "UPDATE_DATA", "dataRef": "dado.rsc.item.evidencia" }
+      ],
+      "note": "Fase de criação/instrução (fase.requerimento), userTask Activity_Instruct, fluxo BPMN Flow_01 (StartEvent_Eligible -> Activity_Instruct) e Flow_02 (-> Activity_Submit). Nenhuma operação além das listadas em catalogs/software.json foi presumida."
+    },
+    {
+      "activityRef": "rsc.pedido.enviar.para.avaliacao",
+      "entryPointRefs": ["entrada.casca.srh.rsc.servidor"],
+      "actionRefs": ["acao.rsc.pedido.enviar.para.avaliacao"],
+      "operationRefs": ["operacao.rsc.enviarparaavaliacao"],
+      "evidenceRefs": [
+        "evidencia.rsc.implementacao",
+        "evidencia.divergencia.divergence.duplicate.send.route"
+      ],
+      "claimStatus": "CONTESTED",
+      "label": "Enviar pedido para avaliação",
+      "publicLabel": "Ação que encaminha o pedido para avaliação",
+      "phaseRef": "fase.requerimento",
+      "actorRefs": ["ator.servidor"],
+      "executionMode": "HUMAN_UI",
+      "policyRefs": ["politica.rsc.escopo.servidor"],
+      "dataRefs": ["dado.rsc.pedido", "dado.rsc.item.evidencia"],
+      "operationRoutes": [
+        { "operationRef": "operacao.rsc.enviarparaavaliacao", "method": "POST", "path": "/sistemas/srh/aplicacoes/rsc/enviar_para_avaliacao.php" }
+      ],
+      "stateTransition": {
+        "key": "transicao.rsc.enviar.avaliacao",
+        "from": "RASCUNHO",
+        "to": "EM_ANALISE",
+        "operationRef": "operacao.rsc.enviarparaavaliacao"
+      },
+      "rulesToPreserve": [
+        "status_principal=RASCUNHO no momento do envio",
+        "Declarações e consistência do pedido válidas",
+        "Itens e comprovantes suficientes para o envio"
+      ],
+      "effectsToPreserve": [
+        { "type": "UPDATE_DATA", "dataRef": "dado.rsc.pedido" }
+      ],
+      "divergence": {
+        "sourceEvidenceRef": "evidencia.divergencia.divergence.duplicate.send.route",
+        "status": "CONTESTED",
+        "confidence": 0.9,
+        "description": "provenance.json registra que, além de operacao.rsc.enviarparaavaliacao, o handler alterar.php também executa a mesma transição RASCUNHO->EM_ANALISE quando recebe acao=enviar_pedido, isto é, uma ação de processo corresponde a duas rotas técnicas na implementação observada.",
+        "implication": "Prejudica rastreabilidade/auditoria 1:1 entre ação e operação; uma implementação nova deve decidir e documentar qual rota é canônica, sem que este agente presuma qual delas prevalece."
+      },
+      "note": "sem inventar rotas ausentes: a única operação primária documentada para esta ação em catalogs/software.json é operacao.rsc.enviarparaavaliacao; a rota alternativa (alterar.php) é reportada apenas porque consta como divergência explícita em provenance.json, não como rota adicional confirmada por este agente."
+    },
+    {
+      "activityRef": "rsc.pedido.validar.protocolar.publicar",
+      "entryPointRefs": [],
+      "actionRefs": ["acao.rsc.pedido.validar.protocolar.publicar"],
+      "operationRefs": [],
+      "evidenceRefs": ["evidencia.rsc.implementacao"],
+      "claimStatus": "DOCUMENTED",
+      "label": "Validar, protocolar e publicar memorial",
+      "publicLabel": "Protocolo automático logo após o envio para avaliação",
+      "phaseRef": "fase.protocolo",
+      "actorRefs": ["ator.sistema"],
+      "executionMode": "AUTOMATED",
+      "elementType": "serviceTask",
+      "dataRefs": ["dado.rsc.pedido", "dado.rsc.item.evidencia"],
+      "effectsToPreserve": [
+        { "type": "UPDATE_DATA", "dataRef": "dado.rsc.pedido" }
+      ],
+      "note": "bindings/operational-traceability.json declara mappingStatus=COMPLETE para esta activity mas operationRefs=[] (nenhuma rota técnica associada). Reportado como lacuna documentada, sem inferir ou inventar um handler para preenchê-la. Sequência BPMN: Flow_02B (Activity_Submit -> Activity_Protocol) -> Flow_03 (-> Activity_Assign)."
+    },
+    {
+      "activityRef": "rsc.comissao.atribuir.responsavel",
+      "entryPointRefs": ["entrada.casca.srh.rsc.comissao"],
+      "actionRefs": ["acao.rsc.comissao.atribuir.responsavel"],
+      "operationRefs": ["operacao.rsc.abrirpedidocomissao", "operacao.rsc.atribuirresponsavel"],
+      "evidenceRefs": ["evidencia.rsc.implementacao"],
+      "claimStatus": "DOCUMENTED",
+      "label": "Atribuir responsável pela avaliação",
+      "publicLabel": "Entrada do pedido na fila de avaliação da comissão",
+      "phaseRef": "fase.analise",
+      "actorRefs": ["ator.comissao"],
+      "executionMode": "HUMAN_UI",
+      "policyRefs": ["politica.rsc.perfil.comissao"],
+      "formRefs": ["formulario.formatribuirresponsavelrsc"],
+      "dataRefs": ["dado.rsc.pedido"],
+      "operationRoutes": [
+        { "operationRef": "operacao.rsc.abrirpedidocomissao", "method": "POST", "path": "/sistemas/srh/aplicacoes/rsc/abrir.php" },
+        { "operationRef": "operacao.rsc.atribuirresponsavel", "method": "POST", "path": "/sistemas/srh/aplicacoes/rsc/atribuir_responsavel.php" }
+      ],
+      "rulesToPreserve": [
+        "Pedido não está em RASCUNHO",
+        "status_principal em EM_ANALISE ou EM_DILIGENCIA",
+        "Responsável possui Perfil Comissão RSC válido e vigente"
+      ],
+      "effectsToPreserve": [
+        { "type": "UPDATE_DATA", "dataRef": "dado.rsc.pedido" }
+      ],
+      "note": "Consome dado.rsc.pedido já em EM_ANALISE (produzido pela transição transicao.rsc.enviar.avaliacao). Fluxo BPMN: Flow_03 (Activity_Protocol -> Activity_Assign) -> Flow_04 (-> Activity_Analyze)."
+    }
+  ],
+  "unresolved": [
+    "Rota técnica duplicada para a ação 'enviar para avaliação' (operacao.rsc.enviarparaavaliacao vs. alterar.php com acao=enviar_pedido) — evidencia.divergencia.divergence.duplicate.send.route, CONTESTED, confiança 0.90; requer decisão institucional sobre qual rota é canônica antes de qualquer reimplementação.",
+    "Nenhuma operationRef documentada para a activity automática rsc.pedido.validar.protocolar.publicar apesar de mappingStatus=COMPLETE; o bundle não identifica o handler responsável por validar/protocolar/publicar o memorial logo após o envio para avaliação, e nenhuma rota foi presumida para preencher essa lacuna.",
+    "Divergência sobre envio automático ao SEI após o Parecer (roteiro de homologação) vs. operação explícita e idempotente 'Acompanhar envio ao SEI' exigida pelo código/teste Cypress — evidencia.divergencia.divergence.send.sei, CONTESTED, confiança 0.90; afeta a mesma linha do tempo do pedido a jusante da avaliação, mas não foi objeto direto desta tarefa.",
+    "Capacidade 'Apagar'/removerRascunho existe na implementação mas não é concedida nem ao grupo RSC - Servidor nem ao grupo RSC - Comissão na carga inicial de ACL — evidencia.divergencia.divergence.delete.draft.acl, CONTESTED, confiança 0.90; relevante à fase de criação do pedido, mas sua acessibilidade real depende de confirmação no banco do ambiente, fora do escopo deste bundle.",
+    "Este agente recebeu apenas a pasta indicada em task.json, sem o diretório reviewer-only e sem contexto adicional, conforme INSTRUCOES.txt; não houve, portanto, cruzamento com a leitura independente do agent-a."
+  ]
+}

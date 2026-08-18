@@ -1,0 +1,46 @@
+{
+  "apiVersion": "processos.furg.br/v2",
+  "kind": "AccessCatalog",
+  "metadata": {
+    "id": "50000000-0000-4000-8000-000000000005",
+    "key": "processo.biblioteca.emprestimo.acesso",
+    "version": "1.0.0",
+    "visibility": "PUBLIC",
+    "status": "DRAFT",
+    "title": "Acesso ao empréstimo",
+    "createdAt": "2026-08-16T21:00:00.000Z",
+    "updatedAt": "2026-08-16T21:00:00.000Z",
+    "labels": {}
+  },
+  "spec": {
+    "actors": [
+      {
+        "key": "ator.usuario.biblioteca",
+        "label": "Pessoa com vínculo ativo",
+        "kind": "AFFILIATION"
+      },
+      {
+        "key": "ator.atendente.biblioteca",
+        "label": "Atendente da biblioteca",
+        "kind": "ORGANIZATIONAL_ROLE"
+      }
+    ],
+    "profiles": [],
+    "groups": [],
+    "grants": [],
+    "policies": [
+      {
+        "key": "politica.vinculo.ativo",
+        "label": "Vínculo ativo",
+        "layer": "CAPABILITY",
+        "effect": "ALLOW",
+        "expressionLanguage": "CEL",
+        "expression": "vinculo.ativo",
+        "description": "O empréstimo depende de vínculo institucional ativo.",
+        "evidenceRefs": [
+          "evidencia.procedimento.biblioteca"
+        ]
+      }
+    ]
+  }
+}

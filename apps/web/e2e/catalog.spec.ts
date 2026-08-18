@@ -194,7 +194,7 @@ test("abre diretamente um link compartilhado e mantém título e URL canônica",
 
   await expect(page.getByRole("heading", { name: process.title })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Fluxo em formato textual" })).toBeVisible();
-  await expect(page).toHaveTitle(`${process.title} — Visão textual | FURG`);
+  await expect(page).toHaveTitle(`${process.title} - Visão textual | FURG`);
   await expect(page).toHaveURL(new RegExp(`${processUrl(process, "estrutura")}$`));
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", new RegExp(`${processUrl(process, "estrutura")}$`));
 });

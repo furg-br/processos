@@ -1,0 +1,93 @@
+{
+  "apiVersion": "processos.furg.br/v2",
+  "kind": "DataAssetCatalog",
+  "metadata": {
+    "id": "40000000-0000-4000-8000-000000000005",
+    "key": "processo.rsc.pcctae.dados",
+    "version": "2.0.0",
+    "visibility": "TECHNICAL",
+    "status": "DRAFT",
+    "title": "Inventário de dados e documentos do RSC",
+    "createdAt": "2026-08-16T21:00:00.000Z",
+    "updatedAt": "2026-08-16T21:00:00.000Z",
+    "labels": {
+      "perspective": "AS_IS",
+      "origin": "reverse-engineering"
+    }
+  },
+  "spec": {
+    "assets": [
+      {
+        "key": "dado.rsc.pedido",
+        "label": "Pedido de RSC-PCCTAE",
+        "kind": "INFORMATION_ASSET",
+        "ownerUnitRef": "unidade.progep",
+        "classification": "RESTRICTED",
+        "schemaPath": "data/schemas/rsc-pedido.v1.schema.json",
+        "authoritativeSourceRef": "sistema.casca",
+        "evidenceRefs": [
+          "evidencia.rsc.implementacao"
+        ]
+      },
+      {
+        "key": "dado.rsc.item.evidencia",
+        "label": "Item e comprovante do pedido",
+        "kind": "INFORMATION_ASSET",
+        "ownerUnitRef": "unidade.progep",
+        "classification": "RESTRICTED",
+        "schemaPath": "data/schemas/rsc-item-evidencia.v1.schema.json",
+        "authoritativeSourceRef": "sistema.casca",
+        "evidenceRefs": [
+          "evidencia.rsc.implementacao"
+        ]
+      },
+      {
+        "key": "dado.rsc.diligencia",
+        "label": "Diligência seletiva",
+        "kind": "INFORMATION_ASSET",
+        "ownerUnitRef": "unidade.progep",
+        "classification": "RESTRICTED",
+        "schemaPath": "data/schemas/rsc-diligencia.v1.schema.json",
+        "authoritativeSourceRef": "sistema.casca",
+        "evidenceRefs": [
+          "evidencia.rsc.implementacao"
+        ]
+      },
+      {
+        "key": "documento.rsc.parecer",
+        "label": "Parecer da Comissão RSC",
+        "kind": "DOCUMENT",
+        "ownerUnitRef": "unidade.progep",
+        "classification": "RESTRICTED",
+        "schemaPath": "data/schemas/rsc-parecer.v1.schema.json",
+        "authoritativeSourceRef": "sistema.casca",
+        "evidenceRefs": [
+          "evidencia.rsc.implementacao"
+        ]
+      },
+      {
+        "key": "documento.rsc.dossie.sei",
+        "label": "Dossiê final para o SEI",
+        "kind": "DOCUMENT",
+        "ownerUnitRef": "unidade.progep",
+        "classification": "RESTRICTED",
+        "schemaPath": "data/schemas/rsc-dossie-envio-sei.v1.schema.json",
+        "authoritativeSourceRef": "sistema.casca",
+        "evidenceRefs": [
+          "evidencia.rsc.implementacao"
+        ]
+      },
+      {
+        "key": "dado.rsc.confirmacao.retentativa",
+        "label": "Confirmação de nova tentativa",
+        "kind": "BUSINESS_CONCEPT",
+        "ownerUnitRef": "unidade.progep",
+        "classification": "RESTRICTED",
+        "authoritativeSourceRef": "sistema.casca",
+        "evidenceRefs": [
+          "evidencia.rsc.implementacao"
+        ]
+      }
+    ]
+  }
+}

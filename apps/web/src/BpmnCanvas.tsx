@@ -9,11 +9,43 @@ import { FurgButton, FurgMessage } from "@furg/design-system/react";
 
 type BpmnInstance = Modeler | NavigatedViewer;
 
-export function BpmnCanvas({ editable, xml, onSave, onDirtyChange }: {
+type BpmnCanvasService = {
+  resized?: () => void;
+  viewbox: (box?: { height: number; width: number; x: number; y: number }) => any;
+  zoom: (scale: number | "fit-viewport") => number;
+};
+
+export function fitBpmnCanvas(canvas: BpmnCanvasService, mode: "height" | "viewport") {
+  canvas.resized?.();
+  if (mode === "viewport") {
+    canvas.zoom("fit-viewport");
+    return;
+  }
+  const viewbox = canvas.viewbox();
+  const { inner, outer } = viewbox ?? {};
+  if (!inner?.height || !outer?.height || !outer?.width) {
+    canvas.zoom("fit-viewport");
+    return;
+  }
+  const padding = 32;
+  const scale = Math.max(0.05, (outer.height - padding * 2) / inner.height);
+  const visibleHeight = outer.height / scale;
+  const visibleWidth = outer.width / scale;
+  canvas.viewbox({
+    height: visibleHeight,
+    width: visibleWidth,
+    x: inner.x - padding / scale,
+    y: inner.y - padding / scale,
+  });
+}
+
+export function BpmnCanvas({ editable, xml, onSave, onDirtyChange, operationalBadges, onElementSelect }: {
   editable: boolean;
   xml: string;
   onSave?: (xml: string) => Promise<void>;
   onDirtyChange?: (dirty: boolean) => void;
+  operationalBadges?: Array<{ elementId: string; label: string; tone?: "human" | "automatic" | "external" }>;
+  onElementSelect?: (elementId: string) => void;
 }) {
   const workspaceRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -43,8 +75,20 @@ export function BpmnCanvas({ editable, xml, onSave, onDirtyChange }: {
     instanceRef.current = instance;
     void instance.importXML(xml).then(() => {
       if (!active) return;
-      instance.get<any>("canvas").zoom("fit-viewport");
+      fitBpmnCanvas(instance.get<any>("canvas"), editable ? "viewport" : "height");
       setIssues(validateBpmnXml(xml));
+      const overlays = instance.get<any>("overlays");
+      const elementRegistry = instance.get<any>("elementRegistry");
+      for (const badge of operationalBadges ?? []) {
+        if (!elementRegistry.get(badge.elementId)) continue;
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `bpmn-operational-badge bpmn-operational-badge--${badge.tone ?? "human"}`;
+        button.textContent = badge.label;
+        button.setAttribute("aria-label", `${badge.label}: abrir detalhes da atividade`);
+        button.addEventListener("click", () => onElementSelect?.(badge.elementId));
+        overlays.add(badge.elementId, { position: { top: -12, right: -8 }, html: button });
+      }
       if (editable) {
         instance.get<any>("linting").toggle(true);
         instance.get<any>("eventBus").on("commandStack.changed", () => setDirty(true));
@@ -53,14 +97,13 @@ export function BpmnCanvas({ editable, xml, onSave, onDirtyChange }: {
     return () => { active = false; instance.destroy(); };
   // O modelador ativo mantém o XML de trabalho. A chave fornecida pela página
   // recria a instância apenas ao trocar de processo ou de modo de edição.
-  }, [editable]);
+  }, [editable, operationalBadges, onElementSelect, xml]);
 
   useEffect(() => {
     function refitCanvas() {
       window.requestAnimationFrame(() => {
         const canvas = instanceRef.current?.get<any>("canvas");
-        canvas?.resized?.();
-        canvas?.zoom?.("fit-viewport");
+        if (canvas) fitBpmnCanvas(canvas, editable ? "viewport" : "height");
       });
     }
     function handleFullscreenChange() {
@@ -83,7 +126,7 @@ export function BpmnCanvas({ editable, xml, onSave, onDirtyChange }: {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [fullscreenMode]);
+  }, [editable, fullscreenMode]);
 
   async function toggleFullscreen() {
     if (fullscreenMode === "native") {

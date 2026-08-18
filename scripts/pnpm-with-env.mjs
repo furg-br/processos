@@ -12,9 +12,14 @@ try {
   throw error;
 }
 
-const child = spawn("pnpm", process.argv.slice(2), {
+const pnpmCli = process.env.npm_execpath;
+if (!pnpmCli) {
+  console.error("Execute este wrapper por meio de um script pnpm do projeto.");
+  process.exit(1);
+}
+const child = spawn(process.execPath, [pnpmCli, ...process.argv.slice(2)], {
   env: process.env,
-  shell: process.platform === "win32",
+  shell: false,
   stdio: "inherit",
 });
 

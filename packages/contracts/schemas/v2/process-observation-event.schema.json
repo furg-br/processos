@@ -1,0 +1,100 @@
+{
+  "$ref": "#/definitions/ProcessObservationEvent",
+  "definitions": {
+    "ProcessObservationEvent": {
+      "type": "object",
+      "properties": {
+        "specversion": {
+          "type": "string",
+          "const": "1.0"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "source": {
+          "type": "string",
+          "format": "uri"
+        },
+        "type": {
+          "type": "string",
+          "pattern": "^br\\.furg\\.processos\\.[a-z0-9.-]+\\.v\\d+$"
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1
+        },
+        "time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "datacontenttype": {
+          "type": "string",
+          "const": "application/json"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "processReleaseId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "externalInstanceId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "activitySemanticId": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 200,
+              "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$",
+              "errorMessage": {
+                "pattern": "Use uma chave semântica estável em minúsculas."
+              }
+            },
+            "milestoneSemanticId": {
+              "$ref": "#/definitions/ProcessObservationEvent/properties/data/properties/activitySemanticId"
+            },
+            "relatedObjectRefs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "default": []
+            },
+            "currentDeadline": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "potentiallyAvailableActionRefs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ProcessObservationEvent/properties/data/properties/activitySemanticId"
+              },
+              "default": []
+            }
+          },
+          "required": [
+            "processReleaseId",
+            "externalInstanceId"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "specversion",
+        "id",
+        "source",
+        "type",
+        "subject",
+        "time",
+        "datacontenttype",
+        "data"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processos.furg.br/schemas/v2/process-observation-event.schema.json"
+}

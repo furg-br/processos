@@ -1,0 +1,11 @@
+{
+  "generatedAt": "2026-08-16T22:47:12.277Z",
+  "contractVersion": "processos.furg.br/v2",
+  "bundleSha256": "77d238b4f9a709afc34e09cb5a5f194b8ef5688ab90e5563199a423ea13b072e",
+  "agentPackages": [
+    "agent-a",
+    "agent-b"
+  ],
+  "reviewerOnly": "reviewer-only",
+  "warning": "Nunca entregue reviewer-only aos agentes participantes."
+}

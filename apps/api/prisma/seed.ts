@@ -8,6 +8,8 @@ const ids = {
   cgti: "10000000-0000-4000-8000-000000000002",
   proplad: "10000000-0000-4000-8000-000000000003",
   unit: "10000000-0000-4000-8000-000000000004",
+  progep: "10000000-0000-4000-8000-000000000005",
+  crsc: "10000000-0000-4000-8000-000000000006",
   taxonomy: "20000000-0000-4000-8000-000000000001",
   intake: "30000000-0000-4000-8000-000000000001",
   priority: "30000000-0000-4000-8000-000000000002",
@@ -78,6 +80,7 @@ async function main() {
   await prisma.systemModule.deleteMany();
   await prisma.softwareSystem.deleteMany();
   await prisma.taxonomy.deleteMany();
+  await prisma.organizationUnitReference.deleteMany();
   await prisma.organizationUnit.deleteMany();
 
   await prisma.organizationUnit.createMany({ data: [
@@ -85,6 +88,15 @@ async function main() {
     { id: ids.cgti, externalId: "FURG-CGTI", acronym: "CGTI", name: "Centro de Gestão de Tecnologia da Informação", parentId: ids.proiti },
     { id: ids.proplad, externalId: "FURG-PROPLAD", acronym: "PROPLAD", name: "Pró-Reitoria de Planejamento e Administração" },
     { id: ids.unit, externalId: "FURG-UNIDADE", acronym: "UNIDADE", name: "Unidade demandante" },
+    { id: ids.progep, externalId: "FURG-PROGEP", acronym: "PROGEP", name: "Pró-Reitoria de Gestão e Desenvolvimento de Pessoas" },
+    { id: ids.crsc, externalId: "FURG-CRSC", acronym: "CRSC", name: "Comissão RSC-PCCTAE", parentId: ids.progep },
+  ] });
+  await prisma.organizationUnitReference.createMany({ data: [
+    { unitId: ids.proiti, sourceSystem: "PROCESS_BUNDLE_V2", reference: "unidade.proiti" },
+    { unitId: ids.cgti, sourceSystem: "PROCESS_BUNDLE_V2", reference: "unidade.cgti" },
+    { unitId: ids.proplad, sourceSystem: "PROCESS_BUNDLE_V2", reference: "unidade.proplad" },
+    { unitId: ids.progep, sourceSystem: "PROCESS_BUNDLE_V2", reference: "unidade.progep" },
+    { unitId: ids.crsc, sourceSystem: "PROCESS_BUNDLE_V2", reference: "unidade.comissao.rsc" },
   ] });
   await prisma.taxonomy.create({ data: { id: ids.taxonomy, name: "Transformação digital", slug: "transformacao-digital" } });
 

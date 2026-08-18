@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_Library" targetNamespace="https://processos.furg.br/examples/library">
+  <bpmn:process id="Process_Library" name="Empréstimo presencial de material bibliográfico" isExecutable="false">
+    <bpmn:startEvent id="Start_Request" name="Pessoa apresenta material"><bpmn:outgoing>Flow_1</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:manualTask id="Activity_Present" name="Apresentar identificação e material no balcão"><bpmn:incoming>Flow_1</bpmn:incoming><bpmn:outgoing>Flow_2</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:manualTask id="Activity_Check" name="Conferir vínculo e condições de empréstimo"><bpmn:incoming>Flow_2</bpmn:incoming><bpmn:outgoing>Flow_3</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:manualTask id="Activity_Deliver" name="Entregar material e informar data de devolução"><bpmn:incoming>Flow_3</bpmn:incoming><bpmn:outgoing>Flow_4</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:endEvent id="End_Loan" name="Empréstimo orientado"><bpmn:incoming>Flow_4</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="Start_Request" targetRef="Activity_Present" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Activity_Present" targetRef="Activity_Check" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Activity_Check" targetRef="Activity_Deliver" />
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Activity_Deliver" targetRef="End_Loan" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_Library"><bpmndi:BPMNPlane id="Plane_Library" bpmnElement="Process_Library">
+    <bpmndi:BPMNShape id="Start_Request_di" bpmnElement="Start_Request"><dc:Bounds x="90" y="152" width="36" height="36" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="Activity_Present_di" bpmnElement="Activity_Present"><dc:Bounds x="180" y="130" width="150" height="80" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="Activity_Check_di" bpmnElement="Activity_Check"><dc:Bounds x="390" y="130" width="150" height="80" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="Activity_Deliver_di" bpmnElement="Activity_Deliver"><dc:Bounds x="600" y="130" width="150" height="80" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="End_Loan_di" bpmnElement="End_Loan"><dc:Bounds x="810" y="152" width="36" height="36" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1"><di:waypoint x="126" y="170" /><di:waypoint x="180" y="170" /></bpmndi:BPMNEdge>
+    <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2"><di:waypoint x="330" y="170" /><di:waypoint x="390" y="170" /></bpmndi:BPMNEdge>
+    <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3"><di:waypoint x="540" y="170" /><di:waypoint x="600" y="170" /></bpmndi:BPMNEdge>
+    <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4"><di:waypoint x="750" y="170" /><di:waypoint x="810" y="170" /></bpmndi:BPMNEdge>
+  </bpmndi:BPMNPlane></bpmndi:BPMNDiagram>
+</bpmn:definitions>
